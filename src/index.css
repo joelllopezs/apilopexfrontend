@@ -1,0 +1,108 @@
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Inter, Arial, sans-serif;
+  background: #050505;
+  color: #ffffff;
+}
+
+button,
+input,
+select,
+textarea {
+  font-family: inherit;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.page {
+  min-height: 100vh;
+  background: radial-gradient(circle at top, #171022 0%, #050505 45%);
+}
+
+.card {
+  background: #121218;
+  border: 1px solid rgba(136, 90, 254, 0.22);
+  border-radius: 18px;
+  padding: 22px;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.35);
+}
+
+.input {
+  width: 100%;
+  background: #09090d;
+  border: 1px solid #2a2a35;
+  color: #fff;
+  padding: 13px 14px;
+  border-radius: 12px;
+  outline: none;
+}
+
+.input:focus {
+  border-color: #885afe;
+}
+
+.button {
+  background: linear-gradient(135deg, #885afe, #563ba6);
+  color: white;
+  border: 0;
+  padding: 13px 16px;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.button:hover {
+  opacity: 0.92;
+}
+
+.button.secondary {
+  background: #1d1d27;
+  border: 1px solid #343445;
+}
+
+.layout {
+  display: flex;
+  min-height: 100vh;
+}
+
+.content {
+  flex: 1;
+  padding: 28px;
+}
+
+.grid {
+  display: grid;
+  gap: 18px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: 14px;
+  border-bottom: 1px solid #292936;
+  text-align: left;
+}
+
+.table th {
+  color: #b8b8c8;
+  font-size: 13px;
+}
+
+.badge {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: rgba(136, 90, 254, 0.18);
+  color: #bda7ff;
+  font-size: 12px;
+}
