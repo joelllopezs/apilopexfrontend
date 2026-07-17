@@ -6,6 +6,7 @@ import {
   Users,
   UserRound,
   Clock,
+  Building2,
   LogOut,
 } from "lucide-react";
 
@@ -40,6 +41,11 @@ const menu = [
     path: "/appointments",
     icon: CalendarDays,
   },
+  {
+ label: "Empresa",
+ path: "/company",
+ icon: Building2,
+},
 ];
 
 export default function Sidebar() {
