@@ -1,60 +1,146 @@
 import { useEffect, useState } from "react";
-import Sidebar from "../components/Sidebar";
 import api from "../api/api";
+import Sidebar from "../components/Sidebar";
+
 export default function Clients() {
- const [clients, setClients] = useState([]);
- const [name, setName] = useState("");
- const [email, setEmail] = useState("");
- const [phone, setPhone] = useState("");
- const [message, setMessage] = useState("");
- async function loadClients() {
- const response = await api.get("/clients");
- setClients(response.data);
- }
- async function handleCreate(event) {
- event.preventDefault();
- try {
- await api.post("/clients", { name, email, phone });
- setName(""); setEmail(""); setPhone("");
- setMessage("Cliente cadastrado com sucesso.");
- await loadClients();
- } catch (error) {
- setMessage(error.response?.data?.message || "Erro ao cadastrar cliente.");
- }
- }
- useEffect(() => { loadClients(); }, []);
- return (
- <div className="layout">
- <Sidebar />
- <main className="content">
- <h1>Clientes</h1>
- <p style={{ color: "#b8b8c8" }}>Cadastre os clientes que podem ser agendados.</p>
- <div style={{ display: "grid", gridTemplateColumns: "420px 1fr", gap: 20, marginTop: 24 }}>
- <form className="card" onSubmit={handleCreate}>
- <h2>Novo cliente</h2>
- <div className="grid">
- <input className="input" value={name} onChange={(e) => setName(e.target.value)} placeholder="Nome" />
- <input className="input" value={email} onChange={(e) => setEmail(e.target.value)} placeholder="E-mail" />
- <input className="input" value={phone} onChange={(e) => setPhone(e.target.value)} placeholder="Telefone" />
- {message && <div style={{ color: "#d8ccff" }}>{message}</div>}
- <button className="button">Cadastrar cliente</button>
- </div>
- </form>
- <section className="card">
- <h2>Clientes cadastrados</h2>
- <table className="table">
- <thead><tr><th>Nome</th><th>E-mail</th><th>Telefone</th></tr></thead>
- <tbody>
- {clients.map((item) => (
- <tr key={item.id}>
- <td>{item.name}</td><td>{item.email || "-"}</td><td>{item.phone || "-"}</td>
- </tr>
- ))}
- </tbody>
- </table>
- </section>
- </div>
- </main>
- </div>
- );
+  const [clients, setClients] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [message, setMessage] = useState("");
+
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    phone: "",
+  });
+
+  async function loadClients() {
+    try {
+      const response = await api.get("/clients");
+
+      const data = Array.isArray(response.data)
+        ? response.data
+        : response.data.clients || [];
+
+      setClients(data);
+    } catch (error) {
+      console.error(error);
+      setMessage(
+        error.response?.data?.message ||
+          "Erro ao carregar clientes."
+      );
+    }
+  }
+
+  async function handleSubmit(e) {
+    e.preventDefault();
+    setLoading(true);
+    setMessage("");
+
+    try {
+      await api.post("/clients", {
+        name: form.name,
+        email: form.email || null,
+        phone: form.phone || null,
+      });
+
+      setForm({
+        name: "",
+        email: "",
+        phone: "",
+      });
+
+      setMessage("Cliente cadastrado com sucesso.");
+      await loadClients();
+    } catch (error) {
+      console.error(error);
+      setMessage(
+        error.response?.data?.message ||
+          "Erro ao cadastrar cliente."
+      );
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    loadClients();
+  }, []);
+
+  return (
+    <div className="app-layout">
+      <Sidebar />
+
+      <main className="main-content">
+        <h1>Clientes</h1>
+        <p>Cadastre os clientes que poderão receber agendamentos.</p>
+
+        {message && <div className="alert-message">{message}</div>}
+
+        <form className="form-card" onSubmit={handleSubmit}>
+          <div>
+            <label>Nome do cliente</label>
+            <input
+              value={form.name}
+              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              placeholder="Ex: Carlos Cliente"
+              required
+            />
+          </div>
+
+          <div>
+            <label>E-mail</label>
+            <input
+              type="email"
+              value={form.email}
+              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              placeholder="Ex: cliente@email.com"
+            />
+          </div>
+
+          <div>
+            <label>Telefone</label>
+            <input
+              value={form.phone}
+              onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              placeholder="Ex: (14) 99999-9999"
+            />
+          </div>
+
+          <button type="submit" disabled={loading}>
+            {loading ? "Cadastrando..." : "Cadastrar cliente"}
+          </button>
+        </form>
+
+        <div className="table-card">
+          <h2>Clientes cadastrados</h2>
+
+          <table>
+            <thead>
+              <tr>
+                <th>Nome</th>
+                <th>E-mail</th>
+                <th>Telefone</th>
+              </tr>
+            </thead>
+
+            <tbody>
+              {clients.length === 0 ? (
+                <tr>
+                  <td colSpan="3">Nenhum cliente cadastrado.</td>
+                </tr>
+              ) : (
+                clients.map((client) => (
+                  <tr key={client.id}>
+                    <td>{client.name}</td>
+                    <td>{client.email || "—"}</td>
+                    <td>{client.phone || "—"}</td>
+                  </tr>
+                ))
+              )}
+            </tbody>
+          </table>
+        </div>
+      </main>
+    </div>
+  );
 }
