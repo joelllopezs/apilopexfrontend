@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import api from "../api/api";
 
 export default function Login() {
@@ -107,6 +107,13 @@ export default function Login() {
           <button className="button" type="submit" disabled={loading}>
             {loading ? "Entrando..." : "Entrar"}
           </button>
+          <button type="submit" disabled={loading}>
+  {loading ? "Entrando..." : "Entrar"}
+</button>
+
+<p className="login-footer">
+  Ainda não tem conta? <Link to="/register-company">Cadastrar empresa</Link>
+</p>
         </div>
       </form>
     </main>
