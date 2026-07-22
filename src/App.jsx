@@ -8,6 +8,7 @@ import Professionals from "./pages/Professionals";
 import Clients from "./pages/Clients";
 import BusinessHours from "./pages/BusinessHours";
 import Company from "./pages/Company";
+import RegisterCompany from "./pages/RegisterCompany";
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem("@lopex:token");
@@ -24,6 +25,7 @@ export default function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<Login />} />
+        <Route path="/register-company" element={<RegisterCompany />} />
 
         <Route
           path="/dashboard"
