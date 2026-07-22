@@ -1,5 +1,5 @@
 import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
-
+import Admin from "./pages/Admin";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Appointments from "./pages/Appointments";
@@ -35,7 +35,14 @@ export default function App() {
             </PrivateRoute>
           }
         />
-
+        <Route
+          path="/admin"
+          element={
+          <PrivateRoute>
+            <Admin />
+          </PrivateRoute>
+            }
+          />
         <Route
           path="/services"
           element={

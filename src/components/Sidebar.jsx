@@ -8,6 +8,7 @@ import {
   Clock,
   Building2,
   LogOut,
+  ShieldCheck,
 } from "lucide-react";
 
 const menu = [
@@ -16,6 +17,11 @@ const menu = [
     path: "/dashboard",
     icon: LayoutDashboard,
   },
+  {
+  path: "/admin",
+  label: "Admin Master",
+  icon: ShieldCheck,
+},
   {
     label: "Serviços",
     path: "/services",
