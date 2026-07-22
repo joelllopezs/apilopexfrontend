@@ -107,9 +107,6 @@ export default function Login() {
           <button className="button" type="submit" disabled={loading}>
             {loading ? "Entrando..." : "Entrar"}
           </button>
-          <button type="submit" disabled={loading}>
-  {loading ? "Entrando..." : "Entrar"}
-</button>
 
 <p className="login-footer">
   Ainda não tem conta? <Link to="/register-company">Cadastrar empresa</Link>
