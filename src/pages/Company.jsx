@@ -24,6 +24,19 @@ export default function Company() {
       .replace(/(^-|-$)+/g, "");
   }
 
+  function applyCompanyIdentity(company) {
+    const primaryColor = company?.primaryColor || "#885AFE";
+
+    localStorage.setItem("@lopex:company", JSON.stringify(company));
+
+    document.documentElement.style.setProperty(
+      "--primary-color",
+      primaryColor
+    );
+
+    window.dispatchEvent(new Event("company-updated"));
+  }
+
   function handleNameChange(e) {
     const name = e.target.value;
 
@@ -50,12 +63,10 @@ export default function Company() {
         primaryColor: company.primaryColor || "#885AFE",
       });
 
-      document.documentElement.style.setProperty(
-        "--primary-color",
-        company.primaryColor || "#885AFE"
-      );
+      applyCompanyIdentity(company);
     } catch (error) {
       console.error(error);
+
       setMessage(
         error.response?.data?.message || "Erro ao carregar dados da empresa."
       );
@@ -80,16 +91,21 @@ export default function Company() {
 
       const updatedCompany = response.data.company;
 
-      localStorage.setItem("@lopex:company", JSON.stringify(updatedCompany));
+      setForm({
+        name: updatedCompany.name || "",
+        slug: updatedCompany.slug || "",
+        email: updatedCompany.email || "",
+        phone: updatedCompany.phone || "",
+        logoUrl: updatedCompany.logoUrl || "",
+        primaryColor: updatedCompany.primaryColor || "#885AFE",
+      });
 
-      document.documentElement.style.setProperty(
-        "--primary-color",
-        updatedCompany.primaryColor || "#885AFE"
-      );
+      applyCompanyIdentity(updatedCompany);
 
       setMessage("Identidade da empresa atualizada com sucesso.");
     } catch (error) {
       console.error(error);
+
       setMessage(
         error.response?.data?.message ||
           "Erro ao atualizar identidade da empresa."
@@ -130,7 +146,10 @@ export default function Company() {
               <input
                 value={form.slug}
                 onChange={(e) =>
-                  setForm({ ...form, slug: generateSlug(e.target.value) })
+                  setForm({
+                    ...form,
+                    slug: generateSlug(e.target.value),
+                  })
                 }
                 placeholder="Ex: barbearia-do-kleber"
                 required
@@ -142,7 +161,12 @@ export default function Company() {
               <input
                 type="email"
                 value={form.email}
-                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    email: e.target.value,
+                  })
+                }
                 placeholder="Ex: contato@empresa.com"
               />
             </div>
@@ -151,7 +175,12 @@ export default function Company() {
               <label>Telefone / WhatsApp</label>
               <input
                 value={form.phone}
-                onChange={(e) => setForm({ ...form, phone: e.target.value })}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    phone: e.target.value,
+                  })
+                }
                 placeholder="Ex: (14) 99999-9999"
               />
             </div>
@@ -161,7 +190,10 @@ export default function Company() {
               <input
                 value={form.logoUrl}
                 onChange={(e) =>
-                  setForm({ ...form, logoUrl: e.target.value })
+                  setForm({
+                    ...form,
+                    logoUrl: e.target.value,
+                  })
                 }
                 placeholder="https://site.com/logo.png"
               />
@@ -173,7 +205,10 @@ export default function Company() {
                 type="color"
                 value={form.primaryColor}
                 onChange={(e) =>
-                  setForm({ ...form, primaryColor: e.target.value })
+                  setForm({
+                    ...form,
+                    primaryColor: e.target.value,
+                  })
                 }
               />
             </div>
@@ -191,7 +226,7 @@ export default function Company() {
               style={{ borderColor: form.primaryColor }}
             >
               {form.logoUrl ? (
-                <img src={form.logoUrl} alt={form.name} />
+                <img src={form.logoUrl} alt={form.name || "Logo da empresa"} />
               ) : (
                 <strong style={{ color: form.primaryColor }}>
                   {form.name ? form.name.slice(0, 2).toUpperCase() : "LX"}

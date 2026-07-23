@@ -1,140 +1,162 @@
-import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { NavLink, useNavigate } from "react-router-dom";
 import {
-  CalendarDays,
   LayoutDashboard,
   Scissors,
+  User,
   Users,
-  UserRound,
   Clock,
+  CalendarDays,
   Building2,
   LogOut,
   ShieldCheck,
 } from "lucide-react";
 
-const menu = [
-  {
-    label: "Dashboard",
-    path: "/dashboard",
-    icon: LayoutDashboard,
-  },
-  {
-  path: "/admin",
-  label: "Admin Master",
-  icon: ShieldCheck,
-},
-  {
-    label: "Serviços",
-    path: "/services",
-    icon: Scissors,
-  },
-  {
-    label: "Profissionais",
-    path: "/professionals",
-    icon: UserRound,
-  },
-  {
-    label: "Clientes",
-    path: "/clients",
-    icon: Users,
-  },
-  {
-    label: "Horários",
-    path: "/business-hours",
-    icon: Clock,
-  },
-  {
-    label: "Agenda",
-    path: "/appointments",
-    icon: CalendarDays,
-  },
-  {
- label: "Empresa",
- path: "/company",
- icon: Building2,
-},
-];
+import api from "../api/api";
 
 export default function Sidebar() {
-  const location = useLocation();
   const navigate = useNavigate();
+  const [company, setCompany] = useState(null);
+  const [user, setUser] = useState(null);
 
-  function logout() {
+  const menuItems = [
+    {
+      path: "/dashboard",
+      label: "Dashboard",
+      icon: LayoutDashboard,
+    },
+    {
+      path: "/admin",
+      label: "Admin Master",
+      icon: ShieldCheck,
+      onlySuperAdmin: true,
+    },
+    {
+      path: "/services",
+      label: "Serviços",
+      icon: Scissors,
+    },
+    {
+      path: "/professionals",
+      label: "Profissionais",
+      icon: User,
+    },
+    {
+      path: "/clients",
+      label: "Clientes",
+      icon: Users,
+    },
+    {
+      path: "/business-hours",
+      label: "Horários",
+      icon: Clock,
+    },
+    {
+      path: "/appointments",
+      label: "Agenda",
+      icon: CalendarDays,
+    },
+    {
+      path: "/company",
+      label: "Empresa",
+      icon: Building2,
+    },
+  ];
+
+  async function loadCompany() {
+    try {
+      const storedUser = localStorage.getItem("@lopex:user");
+
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      }
+
+      const response = await api.get("/companies/me");
+      const companyData = response.data;
+
+      setCompany(companyData);
+
+      localStorage.setItem("@lopex:company", JSON.stringify(companyData));
+
+      document.documentElement.style.setProperty(
+        "--primary-color",
+        companyData.primaryColor || "#885AFE"
+      );
+    } catch (error) {
+      const storedCompany = localStorage.getItem("@lopex:company");
+
+      if (storedCompany) {
+        const companyData = JSON.parse(storedCompany);
+        setCompany(companyData);
+
+        document.documentElement.style.setProperty(
+          "--primary-color",
+          companyData.primaryColor || "#885AFE"
+        );
+      }
+
+      console.error(error);
+    }
+  }
+
+  function handleLogout() {
     localStorage.removeItem("@lopex:token");
     localStorage.removeItem("@lopex:user");
+    localStorage.removeItem("@lopex:company");
     navigate("/");
   }
 
+  useEffect(() => {
+    loadCompany();
+  }, []);
+
+  const visibleMenuItems = menuItems.filter((item) => {
+    if (item.onlySuperAdmin) {
+      return user?.role === "super_admin";
+    }
+
+    return true;
+  });
+
   return (
-    <aside
-      style={{
-        width: 270,
-        background: "#09090d",
-        borderRight: "1px solid #23232e",
-        padding: 22,
-        display: "flex",
-        flexDirection: "column",
-      }}
-    >
-      <div style={{ marginBottom: 30 }}>
-        <div
-          style={{
-            fontSize: 34,
-            fontWeight: 900,
-            letterSpacing: -2,
-          }}
-        >
-          <span>L</span>
-          <span style={{ color: "#885AFE" }}>X</span>
+    <aside className="sidebar">
+      <div className="sidebar-brand">
+        <div className="sidebar-logo">
+          {company?.logoUrl ? (
+            <img src={company.logoUrl} alt={company.name} />
+          ) : (
+            <span>LX</span>
+          )}
         </div>
-        <div style={{ color: "#b8b8c8", marginTop: 4 }}>Lopex Agenda</div>
+
+        <div>
+          <strong>{company?.name || "Lopex Agenda"}</strong>
+          <small>{company?.slug || "Painel de agendamentos"}</small>
+        </div>
       </div>
 
-      <nav style={{ display: "grid", gap: 8 }}>
-        {menu.map((item) => {
+      <nav className="sidebar-menu">
+        {visibleMenuItems.map((item) => {
           const Icon = item.icon;
-          const active = location.pathname === item.path;
 
           return (
-            <Link
+            <NavLink
               key={item.path}
               to={item.path}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                gap: 12,
-                padding: "13px 14px",
-                borderRadius: 12,
-                background: active ? "rgba(136, 90, 254, 0.18)" : "transparent",
-                color: active ? "#fff" : "#b8b8c8",
-                border: active
-                  ? "1px solid rgba(136, 90, 254, 0.35)"
-                  : "1px solid transparent",
-              }}
+              className={({ isActive }) =>
+                isActive ? "sidebar-link active" : "sidebar-link"
+              }
             >
-              <Icon size={19} />
-              {item.label}
-            </Link>
+              <Icon size={20} />
+              <span>{item.label}</span>
+            </NavLink>
           );
         })}
       </nav>
 
-      <button
-        onClick={logout}
-        style={{
-          marginTop: "auto",
-          display: "flex",
-          alignItems: "center",
-          gap: 10,
-          background: "transparent",
-          color: "#ff8f8f",
-          border: "1px solid #38252a",
-          padding: "12px 14px",
-          borderRadius: 12,
-          cursor: "pointer",
-        }}
-      >
-        <LogOut size={18} />
-        Sair
+      <button type="button" className="logout-button" onClick={handleLogout}>
+        <LogOut size={20} />
+        <span>Sair</span>
       </button>
     </aside>
   );
