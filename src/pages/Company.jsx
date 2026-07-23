@@ -115,6 +115,23 @@ export default function Company() {
     }
   }
 
+  async function copyPublicLink() {
+    if (!form.slug) {
+      setMessage("Informe o slug da empresa antes de copiar o link.");
+      return;
+    }
+
+    const publicLink = `${window.location.origin}/agendar/${form.slug}`;
+
+    try {
+      await navigator.clipboard.writeText(publicLink);
+      setMessage("Link público copiado com sucesso.");
+    } catch (error) {
+      console.error(error);
+      setMessage(publicLink);
+    }
+  }
+
   useEffect(() => {
     loadCompany();
   }, []);
@@ -246,6 +263,20 @@ export default function Company() {
             >
               Botão exemplo
             </button>
+
+            <button
+              type="button"
+              className="copy-link-button"
+              onClick={copyPublicLink}
+            >
+              Copiar link público
+            </button>
+
+            {form.slug && (
+              <p className="public-link-preview">
+                /agendar/{form.slug}
+              </p>
+            )}
           </div>
         </div>
       </main>

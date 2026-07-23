@@ -9,6 +9,7 @@ export default function PublicBooking() {
   const [services, setServices] = useState([]);
   const [professionals, setProfessionals] = useState([]);
   const [availableTimes, setAvailableTimes] = useState([]);
+  const [confirmedAppointment, setConfirmedAppointment] = useState(null);
 
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -105,6 +106,25 @@ export default function PublicBooking() {
     }));
   }
 
+  function getSelectedServiceName() {
+    return services.find((service) => service.id === form.serviceId)?.name || "";
+  }
+
+  function getSelectedProfessionalName() {
+    return (
+      professionals.find(
+        (professional) => professional.id === form.professionalId
+      )?.name || ""
+    );
+  }
+
+  function formatDate(dateString) {
+    if (!dateString) return "";
+
+    const [year, month, day] = dateString.split("-");
+    return `${day}/${month}/${year}`;
+  }
+
   async function handleSubmit(e) {
     e.preventDefault();
 
@@ -117,7 +137,7 @@ export default function PublicBooking() {
       setLoading(true);
       setMessage("");
 
-      await api.post(`/public/company/${slug}/appointments`, {
+      const response = await api.post(`/public/company/${slug}/appointments`, {
         serviceId: form.serviceId,
         professionalId: form.professionalId,
         date: form.date,
@@ -129,7 +149,16 @@ export default function PublicBooking() {
         notes: form.notes || null,
       });
 
-      setMessage("Agendamento realizado com sucesso!");
+      setConfirmedAppointment({
+        ...response.data.appointment,
+        serviceName: getSelectedServiceName(),
+        professionalName: getSelectedProfessionalName(),
+        formattedDate: formatDate(form.date),
+        clientName: form.clientName,
+        clientPhone: form.clientPhone,
+      });
+
+      setMessage("");
 
       setForm({
         serviceId: "",
@@ -154,6 +183,11 @@ export default function PublicBooking() {
     }
   }
 
+  function handleNewAppointment() {
+    setConfirmedAppointment(null);
+    setMessage("");
+  }
+
   useEffect(() => {
     loadInitialData();
   }, [slug]);
@@ -161,6 +195,80 @@ export default function PublicBooking() {
   useEffect(() => {
     loadAvailability();
   }, [form.serviceId, form.professionalId, form.date]);
+
+  if (confirmedAppointment) {
+    return (
+      <div className="public-booking-page">
+        <div className="public-booking-card success-card">
+          <header className="public-booking-header">
+            <div className="public-company-logo">
+              {company?.logoUrl ? (
+                <img src={company.logoUrl} alt={company.name} />
+              ) : (
+                <span>
+                  {company?.name
+                    ? company.name.slice(0, 2).toUpperCase()
+                    : "LX"}
+                </span>
+              )}
+            </div>
+
+            <div>
+              <h1>Agendamento confirmado!</h1>
+              <p>Seu horário foi registrado com sucesso.</p>
+            </div>
+          </header>
+
+          <div className="booking-success-box">
+            <h2>{company?.name}</h2>
+
+            <div className="booking-success-row">
+              <span>Cliente</span>
+              <strong>{confirmedAppointment.clientName}</strong>
+            </div>
+
+            <div className="booking-success-row">
+              <span>Serviço</span>
+              <strong>{confirmedAppointment.serviceName}</strong>
+            </div>
+
+            <div className="booking-success-row">
+              <span>Profissional</span>
+              <strong>{confirmedAppointment.professionalName}</strong>
+            </div>
+
+            <div className="booking-success-row">
+              <span>Data</span>
+              <strong>{confirmedAppointment.formattedDate}</strong>
+            </div>
+
+            <div className="booking-success-row">
+              <span>Horário</span>
+              <strong>
+                {confirmedAppointment.startTime} às{" "}
+                {confirmedAppointment.endTime}
+              </strong>
+            </div>
+
+            {confirmedAppointment.clientPhone && (
+              <div className="booking-success-row">
+                <span>Contato</span>
+                <strong>{confirmedAppointment.clientPhone}</strong>
+              </div>
+            )}
+          </div>
+
+          <button
+            type="button"
+            className="public-submit-button"
+            onClick={handleNewAppointment}
+          >
+            Fazer novo agendamento
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="public-booking-page">
@@ -329,7 +437,11 @@ export default function PublicBooking() {
             />
           </div>
 
-          <button className="public-submit-button" type="submit" disabled={loading}>
+          <button
+            className="public-submit-button"
+            type="submit"
+            disabled={loading}
+          >
             {loading ? "Agendando..." : "Confirmar agendamento"}
           </button>
         </form>
