@@ -712,3 +712,185 @@ td {
     position: static;
   }
 }
+:root {
+  --public-primary-color: #885afe;
+}
+
+.public-booking-page {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top, color-mix(in srgb, var(--public-primary-color) 18%, transparent), transparent 34%),
+    #050505;
+  color: #ffffff;
+  padding: 42px 20px;
+}
+
+.public-booking-card {
+  width: 100%;
+  max-width: 860px;
+  margin: 0 auto;
+  background: #121218;
+  border: 1px solid color-mix(in srgb, var(--public-primary-color) 45%, transparent);
+  border-radius: 24px;
+  padding: 32px;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.42);
+}
+
+.public-booking-header {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: 28px;
+}
+
+.public-company-logo {
+  width: 72px;
+  height: 72px;
+  border-radius: 20px;
+  border: 2px solid var(--public-primary-color);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.04);
+}
+
+.public-company-logo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.public-company-logo span {
+  font-size: 28px;
+  font-weight: 900;
+  color: var(--public-primary-color);
+}
+
+.public-booking-header h1 {
+  margin: 0 0 6px;
+  font-size: 32px;
+}
+
+.public-booking-header p {
+  margin: 0;
+  color: #b8b8c8;
+}
+
+.public-alert {
+  background: color-mix(in srgb, var(--public-primary-color) 18%, transparent);
+  border: 1px solid color-mix(in srgb, var(--public-primary-color) 50%, transparent);
+  color: #ffffff;
+  padding: 14px 16px;
+  border-radius: 14px;
+  margin-bottom: 18px;
+  font-weight: 700;
+}
+
+.public-booking-form {
+  display: grid;
+  gap: 22px;
+}
+
+.public-form-section {
+  border-top: 1px solid color-mix(in srgb, var(--public-primary-color) 26%, transparent);
+  padding-top: 22px;
+  display: grid;
+  gap: 10px;
+}
+
+.public-form-section h2 {
+  font-size: 20px;
+  margin: 0 0 8px;
+}
+
+.public-form-section label {
+  font-size: 14px;
+  font-weight: 800;
+}
+
+.public-form-section input,
+.public-form-section select,
+.public-form-section textarea {
+  width: 100%;
+  min-height: 44px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--public-primary-color) 36%, transparent);
+  background: #07070b;
+  color: #ffffff;
+  padding: 0 14px;
+  outline: none;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+.public-form-section textarea {
+  min-height: 90px;
+  padding-top: 12px;
+  resize: vertical;
+}
+
+.public-form-section input:focus,
+.public-form-section select:focus,
+.public-form-section textarea:focus {
+  border-color: var(--public-primary-color);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--public-primary-color) 18%, transparent);
+}
+
+.public-muted {
+  color: #b8b8c8;
+  margin: 0;
+}
+
+.public-time-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(92px, 1fr));
+  gap: 10px;
+}
+
+.public-time-button {
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--public-primary-color) 38%, transparent);
+  background: rgba(255, 255, 255, 0.03);
+  color: #ffffff;
+  cursor: pointer;
+  font-weight: 800;
+}
+
+.public-time-button:hover,
+.public-time-button.selected {
+  background: var(--public-primary-color);
+  border-color: var(--public-primary-color);
+}
+
+.public-submit-button {
+  height: 52px;
+  border: none;
+  border-radius: 14px;
+  background: var(--public-primary-color);
+  color: #ffffff;
+  font-weight: 900;
+  font-size: 15px;
+  cursor: pointer;
+  margin-top: 6px;
+}
+
+.public-submit-button:disabled {
+  opacity: 0.65;
+  cursor: not-allowed;
+}
+
+@media (max-width: 700px) {
+  .public-booking-card {
+    padding: 24px;
+  }
+
+  .public-booking-header {
+    align-items: flex-start;
+  }
+
+  .public-booking-header h1 {
+    font-size: 26px;
+  }
+}

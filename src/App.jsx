@@ -9,6 +9,7 @@ import Clients from "./pages/Clients";
 import BusinessHours from "./pages/BusinessHours";
 import Company from "./pages/Company";
 import RegisterCompany from "./pages/RegisterCompany";
+import PublicBooking from "./pages/PublicBooking";
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem("@lopex:token");
@@ -26,6 +27,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<Login />} />
         <Route path="/register-company" element={<RegisterCompany />} />
+        <Route path="/agendar/:slug" element={<PublicBooking />} />
 
         <Route
           path="/dashboard"
