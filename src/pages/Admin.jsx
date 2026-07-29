@@ -7,6 +7,31 @@ export default function Admin() {
   const [companies, setCompanies] = useState([]);
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
+  const [updatingId, setUpdatingId] = useState("");
+
+  function translateStatus(status) {
+    const statusMap = {
+      active: "Ativa",
+      inactive: "Bloqueada",
+      blocked: "Bloqueada",
+    };
+
+    return statusMap[status] || status;
+  }
+
+  function getStatusClass(status) {
+    return status === "active" ? "status-badge active" : "status-badge blocked";
+  }
+
+  function formatDate(value) {
+    if (!value) return "—";
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) return "—";
+
+    return date.toLocaleDateString("pt-BR");
+  }
 
   async function loadAdminData() {
     try {
@@ -22,6 +47,7 @@ export default function Admin() {
       setCompanies(companiesResponse.data);
     } catch (error) {
       console.error(error);
+
       setMessage(
         error.response?.data?.message ||
           "Erro ao carregar painel administrativo."
@@ -33,19 +59,72 @@ export default function Admin() {
 
   async function updateCompanyStatus(companyId, status) {
     try {
+      setUpdatingId(companyId);
       setMessage("");
 
-      await api.patch(`/admin/companies/${companyId}/status`, {
+      const response = await api.patch(`/admin/companies/${companyId}/status`, {
         status,
       });
+
+      setMessage(
+        response.data?.message ||
+          (status === "active"
+            ? "Empresa ativada com sucesso."
+            : "Empresa bloqueada com sucesso.")
+      );
 
       await loadAdminData();
     } catch (error) {
       console.error(error);
+
       setMessage(
         error.response?.data?.message ||
           "Erro ao atualizar status da empresa."
       );
+    } finally {
+      setUpdatingId("");
+    }
+  }
+
+  async function deleteCompany(company) {
+    const firstConfirm = window.confirm(
+      `Deseja realmente excluir permanentemente a empresa "${company.name}"? Essa ação apagará usuários, serviços, profissionais, clientes, horários e agendamentos dessa empresa.`
+    );
+
+    if (!firstConfirm) return;
+
+    const confirmText = window.prompt(
+      `Para confirmar a exclusão permanente de "${company.name}", digite EXCLUIR`
+    );
+
+    if (confirmText !== "EXCLUIR") {
+      setMessage('Exclusão cancelada. Para excluir, é necessário digitar "EXCLUIR".');
+      return;
+    }
+
+    try {
+      setUpdatingId(company.id);
+      setMessage("");
+
+      const response = await api.delete(`/admin/companies/${company.id}`, {
+        data: {
+          confirmText: "EXCLUIR",
+        },
+      });
+
+      setMessage(
+        response.data?.message || "Empresa excluída permanentemente com sucesso."
+      );
+
+      await loadAdminData();
+    } catch (error) {
+      console.error(error);
+
+      setMessage(
+        error.response?.data?.message || "Erro ao excluir empresa."
+      );
+    } finally {
+      setUpdatingId("");
     }
   }
 
@@ -58,39 +137,89 @@ export default function Admin() {
       <Sidebar />
 
       <main className="main-content">
-        <h1>Painel Master</h1>
-        <p>Controle geral das empresas cadastradas na LopeX Agenda.</p>
+        <div className="admin-title-row">
+          <div>
+            <h1>Painel Master</h1>
+            <p>Controle geral das empresas cadastradas na LopeX Agenda.</p>
+          </div>
+
+          <button
+            type="button"
+            className="dashboard-refresh-button"
+            onClick={loadAdminData}
+            disabled={loading}
+          >
+            {loading ? "Atualizando..." : "Atualizar"}
+          </button>
+        </div>
 
         {message && <div className="alert-message">{message}</div>}
 
         {loading && <div className="alert-message">Carregando dados...</div>}
 
         {summary && (
-          <div className="dashboard-cards">
-            <div className="dashboard-card">
-              <span>Empresas</span>
-              <strong>{summary.companies}</strong>
+          <>
+            <div className="dashboard-cards">
+              <div className="dashboard-card">
+                <span>Empresas</span>
+                <strong>{summary.companies}</strong>
+                <small>Total cadastradas</small>
+              </div>
+
+              <div className="dashboard-card">
+                <span>Ativas</span>
+                <strong>{summary.activeCompanies}</strong>
+                <small>Liberadas para uso</small>
+              </div>
+
+              <div className="dashboard-card">
+                <span>Bloqueadas</span>
+                <strong>
+                  {summary.inactiveCompanies ?? summary.blockedCompanies ?? 0}
+                </strong>
+                <small>Aguardando liberação</small>
+              </div>
+
+              <div className="dashboard-card">
+                <span>Usuários</span>
+                <strong>{summary.users}</strong>
+                <small>Total no sistema</small>
+              </div>
             </div>
 
-            <div className="dashboard-card">
-              <span>Empresas ativas</span>
-              <strong>{summary.activeCompanies}</strong>
-            </div>
+            <div className="dashboard-cards secondary-cards">
+              <div className="dashboard-card">
+                <span>Serviços</span>
+                <strong>{summary.services}</strong>
+              </div>
 
-            <div className="dashboard-card">
-              <span>Usuários</span>
-              <strong>{summary.users}</strong>
-            </div>
+              <div className="dashboard-card">
+                <span>Profissionais</span>
+                <strong>{summary.professionals}</strong>
+              </div>
 
-            <div className="dashboard-card">
-              <span>Agendamentos</span>
-              <strong>{summary.appointments}</strong>
+              <div className="dashboard-card">
+                <span>Clientes</span>
+                <strong>{summary.clients}</strong>
+              </div>
+
+              <div className="dashboard-card">
+                <span>Agendamentos</span>
+                <strong>{summary.appointments}</strong>
+              </div>
             </div>
-          </div>
+          </>
         )}
 
         <div className="table-card admin-table-card">
-          <h2>Empresas cadastradas</h2>
+          <div className="table-header-row">
+            <div>
+              <h2>Empresas cadastradas</h2>
+              <p>
+                Ative, bloqueie ou exclua empresas cadastradas na plataforma.
+              </p>
+            </div>
+          </div>
 
           <table>
             <thead>
@@ -99,6 +228,8 @@ export default function Admin() {
                 <th>Responsável</th>
                 <th>E-mail</th>
                 <th>Status</th>
+                <th>Criada em</th>
+                <th>Usuários</th>
                 <th>Serviços</th>
                 <th>Profissionais</th>
                 <th>Clientes</th>
@@ -110,7 +241,7 @@ export default function Admin() {
             <tbody>
               {companies.length === 0 ? (
                 <tr>
-                  <td colSpan="9">Nenhuma empresa cadastrada.</td>
+                  <td colSpan="11">Nenhuma empresa cadastrada.</td>
                 </tr>
               ) : (
                 companies.map((company) => {
@@ -118,6 +249,9 @@ export default function Admin() {
                     company.users?.find(
                       (user) => user.role === "company_admin"
                     ) || company.users?.[0];
+
+                  const isActive = company.status === "active";
+                  const isUpdating = updatingId === company.id;
 
                   return (
                     <tr key={company.id}>
@@ -128,44 +262,61 @@ export default function Admin() {
                       </td>
 
                       <td>{owner?.name || "—"}</td>
+
                       <td>{owner?.email || company.email || "—"}</td>
 
                       <td>
-                        <span
-                          className={
-                            company.status === "active"
-                              ? "status-badge active"
-                              : "status-badge blocked"
-                          }
-                        >
-                          {company.status}
+                        <span className={getStatusClass(company.status)}>
+                          {translateStatus(company.status)}
                         </span>
                       </td>
 
+                      <td>{formatDate(company.createdAt)}</td>
+
+                      <td>{company._count?.users || 0}</td>
+
                       <td>{company._count?.services || 0}</td>
+
                       <td>{company._count?.professionals || 0}</td>
+
                       <td>{company._count?.clients || 0}</td>
+
                       <td>{company._count?.appointments || 0}</td>
 
                       <td>
                         <div className="table-actions">
-                          <button
-                            type="button"
-                            onClick={() =>
-                              updateCompanyStatus(company.id, "active")
-                            }
-                          >
-                            Ativar
-                          </button>
+                          {!isActive && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                updateCompanyStatus(company.id, "active")
+                              }
+                              disabled={isUpdating}
+                            >
+                              Ativar
+                            </button>
+                          )}
+
+                          {isActive && (
+                            <button
+                              type="button"
+                              className="danger-button"
+                              onClick={() =>
+                                updateCompanyStatus(company.id, "inactive")
+                              }
+                              disabled={isUpdating}
+                            >
+                              Bloquear
+                            </button>
+                          )}
 
                           <button
                             type="button"
                             className="danger-button"
-                            onClick={() =>
-                              updateCompanyStatus(company.id, "blocked")
-                            }
+                            onClick={() => deleteCompany(company)}
+                            disabled={isUpdating}
                           >
-                            Bloquear
+                            Excluir
                           </button>
                         </div>
                       </td>

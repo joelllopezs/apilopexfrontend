@@ -5,6 +5,7 @@ import api from "../api/api";
 export default function RegisterCompany() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
+  const [success, setSuccess] = useState(false);
 
   const initialForm = {
     userName: "",
@@ -164,6 +165,7 @@ export default function RegisterCompany() {
     try {
       setLoading(true);
       setMessage("");
+      setSuccess(false);
 
       const validationError = validateForm();
 
@@ -188,7 +190,12 @@ export default function RegisterCompany() {
 
       await api.post("/auth/register-company", payload);
 
+      localStorage.removeItem("@lopex:token");
+      localStorage.removeItem("@lopex:user");
+      localStorage.removeItem("@lopex:company");
+
       setForm(initialForm);
+      setSuccess(true);
 
       setMessage(
         "Cadastro realizado com sucesso. Sua empresa está aguardando liberação do Admin Master. Após a liberação, você poderá entrar no painel."
@@ -196,6 +203,8 @@ export default function RegisterCompany() {
     } catch (error) {
       console.error(error);
       console.log("ERRO API:", error.response?.data);
+
+      setSuccess(false);
 
       setMessage(
         error.response?.data?.message ||
@@ -218,136 +227,156 @@ export default function RegisterCompany() {
           </div>
         </div>
 
-        {message && <div className="alert-message">{message}</div>}
+        {message && (
+          <div className={success ? "alert-message success-message" : "alert-message"}>
+            {message}
+          </div>
+        )}
 
-        <form onSubmit={handleSubmit} className="login-form">
-          <div className="form-section-title">Dados do responsável</div>
+        {success ? (
+          <div className="login-form">
+            <div className="form-section-title">Cadastro enviado</div>
 
-          <label>Nome do responsável</label>
-          <input
-            value={form.userName}
-            onChange={(e) =>
-              setForm({
-                ...form,
-                userName: e.target.value,
-              })
-            }
-            placeholder="Ex: Carlos Admin"
-            required
-          />
+            <p className="field-help">
+              Sua empresa foi cadastrada, mas ainda precisa ser liberada pelo
+              Admin Master. Depois da liberação, use o e-mail e senha cadastrados
+              para acessar o painel.
+            </p>
 
-          <label>E-mail de acesso</label>
-          <input
-            type="email"
-            value={form.userEmail}
-            onChange={(e) =>
-              setForm({
-                ...form,
-                userEmail: e.target.value,
-              })
-            }
-            placeholder="Ex: carlos@email.com"
-            required
-          />
+            <Link to="/" className="public-submit-button login-link-button">
+              Ir para o login
+            </Link>
+          </div>
+        ) : (
+          <form onSubmit={handleSubmit} className="login-form">
+            <div className="form-section-title">Dados do responsável</div>
 
-          <label>Senha</label>
-          <input
-            type="password"
-            value={form.password}
-            onChange={(e) =>
-              setForm({
-                ...form,
-                password: e.target.value,
-              })
-            }
-            placeholder="Mínimo de 6 caracteres"
-            required
-          />
+            <label>Nome do responsável</label>
+            <input
+              value={form.userName}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  userName: e.target.value,
+                })
+              }
+              placeholder="Ex: Carlos Admin"
+              required
+            />
 
-          <label>Confirmar senha</label>
-          <input
-            type="password"
-            value={form.confirmPassword}
-            onChange={(e) =>
-              setForm({
-                ...form,
-                confirmPassword: e.target.value,
-              })
-            }
-            placeholder="Digite a senha novamente"
-            required
-          />
+            <label>E-mail de acesso</label>
+            <input
+              type="email"
+              value={form.userEmail}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  userEmail: e.target.value,
+                })
+              }
+              placeholder="Ex: carlos@email.com"
+              required
+            />
 
-          <div className="form-section-title">Dados da empresa</div>
+            <label>Senha</label>
+            <input
+              type="password"
+              value={form.password}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  password: e.target.value,
+                })
+              }
+              placeholder="Mínimo de 6 caracteres"
+              required
+            />
 
-          <label>Nome da empresa</label>
-          <input
-            value={form.companyName}
-            onChange={handleCompanyNameChange}
-            placeholder="Ex: Barbearia do Carlos"
-            required
-          />
+            <label>Confirmar senha</label>
+            <input
+              type="password"
+              value={form.confirmPassword}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  confirmPassword: e.target.value,
+                })
+              }
+              placeholder="Digite a senha novamente"
+              required
+            />
 
-          <label>Slug da empresa</label>
-          <input
-            value={form.companySlug}
-            onChange={(e) =>
-              setForm({
-                ...form,
-                companySlug: generateSlug(e.target.value),
-              })
-            }
-            placeholder="Ex: barbearia-carlos"
-            required
-          />
+            <div className="form-section-title">Dados da empresa</div>
 
-          <small className="field-help">
-            O link público ficará assim: /agendar/
-            {form.companySlug || "nome-da-empresa"}
-          </small>
+            <label>Nome da empresa</label>
+            <input
+              value={form.companyName}
+              onChange={handleCompanyNameChange}
+              placeholder="Ex: Barbearia do Carlos"
+              required
+            />
 
-          <label>E-mail da empresa</label>
-          <input
-            type="email"
-            value={form.companyEmail}
-            onChange={(e) =>
-              setForm({
-                ...form,
-                companyEmail: e.target.value,
-              })
-            }
-            placeholder="Ex: contato@empresa.com"
-          />
+            <label>Slug da empresa</label>
+            <input
+              value={form.companySlug}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  companySlug: generateSlug(e.target.value),
+                })
+              }
+              placeholder="Ex: barbearia-carlos"
+              required
+            />
 
-          <label>Telefone / WhatsApp da empresa</label>
-          <input
-            value={form.companyPhone}
-            onChange={(e) =>
-              setForm({
-                ...form,
-                companyPhone: formatPhone(e.target.value),
-              })
-            }
-            placeholder="Ex: (14) 99999-9999"
-            required
-          />
+            <small className="field-help">
+              O link público ficará assim: /agendar/
+              {form.companySlug || "nome-da-empresa"}
+            </small>
 
-          <label>Cor principal</label>
-          <input
-            type="color"
-            value={form.primaryColor}
-            onChange={(e) =>
-              setForm({
-                ...form,
-                primaryColor: e.target.value,
-              })
-            }
-          />
+            <label>E-mail da empresa</label>
+            <input
+              type="email"
+              value={form.companyEmail}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  companyEmail: e.target.value,
+                })
+              }
+              placeholder="Ex: contato@empresa.com"
+            />
 
-          <button type="submit" disabled={loading}>
-            {loading ? "Criando conta..." : "Criar minha empresa"}
-          </button>
-        </form>
+            <label>Telefone / WhatsApp da empresa</label>
+            <input
+              value={form.companyPhone}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  companyPhone: formatPhone(e.target.value),
+                })
+              }
+              placeholder="Ex: (14) 99999-9999"
+              required
+            />
+
+            <label>Cor principal</label>
+            <input
+              type="color"
+              value={form.primaryColor}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  primaryColor: e.target.value,
+                })
+              }
+            />
+
+            <button type="submit" disabled={loading}>
+              {loading ? "Criando conta..." : "Criar minha empresa"}
+            </button>
+          </form>
+        )}
 
         <p className="login-footer">
           Já tem conta? <Link to="/">Entrar no painel</Link>
