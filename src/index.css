@@ -1308,3 +1308,106 @@ button.primary-button:disabled {
 .appointments-table-card table {
   min-width: 820px;
 }
+
+/* =========================
+   AGENDA MELHORADA
+========================= */
+
+.appointments-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 460px) minmax(0, 1fr);
+  gap: 28px;
+  align-items: flex-start;
+}
+
+.appointments-table-card {
+  max-width: 100%;
+}
+
+.appointments-table-card table {
+  min-width: 1050px;
+}
+
+.appointments-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.appointments-header h2 {
+  margin: 0 0 6px;
+}
+
+.appointments-header p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.appointments-filter {
+  min-width: 170px;
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--primary-color) 35%, transparent);
+  background: var(--input-bg);
+  color: var(--text);
+  padding: 0 12px;
+  outline: none;
+}
+
+.time-grid {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.time-button {
+  min-height: 42px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--primary-color) 38%, transparent);
+  background: rgba(255, 255, 255, 0.04);
+  color: #ffffff;
+  font-weight: 800;
+  padding: 0 16px;
+}
+
+.time-button:hover,
+.time-button.selected {
+  background: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.status-badge.pending {
+  background: rgba(255, 193, 7, 0.14);
+  color: #ffe08a;
+  border: 1px solid rgba(255, 193, 7, 0.35);
+}
+
+.status-badge.completed {
+  background: rgba(136, 90, 254, 0.16);
+  color: #cabaff;
+  border: 1px solid rgba(136, 90, 254, 0.38);
+}
+
+.table-actions button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}
+
+@media (max-width: 1200px) {
+  .appointments-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 700px) {
+  .appointments-header {
+    flex-direction: column;
+  }
+
+  .appointments-filter {
+    width: 100%;
+  }
+}
