@@ -1176,7 +1176,7 @@ button.primary-button:disabled {
   margin-left: 0;
   width: 100%;
   max-width: 100%;
-  padding: 86px 18px 32px;
+  padding: 92px 18px 32px;
 }
 }
 
@@ -1215,7 +1215,7 @@ button.primary-button:disabled {
   .app-layout > main,
   .app-layout > section,
   .app-layout > .content {
-    padding: 26px 16px;
+    padding: 92px 26px 16px;
   }
 
   .main-content h1,
