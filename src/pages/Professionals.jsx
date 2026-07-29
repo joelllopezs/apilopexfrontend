@@ -5,7 +5,9 @@ import Sidebar from "../components/Sidebar";
 export default function Professionals() {
   const [professionals, setProfessionals] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [updatingId, setUpdatingId] = useState("");
   const [message, setMessage] = useState("");
+  const [editingProfessionalId, setEditingProfessionalId] = useState("");
 
   const [form, setForm] = useState({
     name: "",
@@ -13,8 +15,38 @@ export default function Professionals() {
     phone: "",
   });
 
+  function resetForm() {
+    setForm({
+      name: "",
+      email: "",
+      phone: "",
+    });
+
+    setEditingProfessionalId("");
+  }
+
+  function translateStatus(status) {
+    const statusMap = {
+      active: "Ativo",
+      inactive: "Inativo",
+    };
+
+    return statusMap[status] || status;
+  }
+
+  function getStatusClass(status) {
+    const statusClassMap = {
+      active: "status-badge active",
+      inactive: "status-badge blocked",
+    };
+
+    return statusClassMap[status] || "status-badge";
+  }
+
   async function loadProfessionals() {
     try {
+      setMessage("");
+
       const response = await api.get("/professionals");
 
       const data = Array.isArray(response.data)
@@ -24,41 +56,121 @@ export default function Professionals() {
       setProfessionals(data);
     } catch (error) {
       console.error(error);
+
       setMessage(
-        error.response?.data?.message ||
-          "Erro ao carregar profissionais."
+        error.response?.data?.message || "Erro ao carregar profissionais."
       );
     }
   }
 
   async function handleSubmit(e) {
     e.preventDefault();
-    setLoading(true);
-    setMessage("");
 
     try {
-      await api.post("/professionals", {
-        name: form.name,
-        email: form.email || null,
-        phone: form.phone || null,
-      });
+      setLoading(true);
+      setMessage("");
 
-      setForm({
-        name: "",
-        email: "",
-        phone: "",
-      });
+      const payload = {
+        name: form.name.trim(),
+        email: form.email.trim() || null,
+        phone: form.phone.trim() || null,
+      };
 
-      setMessage("Profissional cadastrado com sucesso.");
+      if (!payload.name) {
+        setMessage("Informe o nome do profissional.");
+        return;
+      }
+
+      if (editingProfessionalId) {
+        await api.put(`/professionals/${editingProfessionalId}`, payload);
+
+        setMessage("Profissional atualizado com sucesso.");
+      } else {
+        await api.post("/professionals", payload);
+
+        setMessage("Profissional cadastrado com sucesso.");
+      }
+
+      resetForm();
       await loadProfessionals();
     } catch (error) {
       console.error(error);
+
       setMessage(
-        error.response?.data?.message ||
-          "Erro ao cadastrar profissional."
+        error.response?.data?.message || "Erro ao salvar profissional."
       );
     } finally {
       setLoading(false);
+    }
+  }
+
+  function handleEdit(professional) {
+    setEditingProfessionalId(professional.id);
+
+    setForm({
+      name: professional.name || "",
+      email: professional.email || "",
+      phone: professional.phone || "",
+    });
+
+    window.scrollTo({
+      top: 0,
+      behavior: "smooth",
+    });
+  }
+
+  async function updateProfessionalStatus(professionalId, status) {
+    try {
+      setUpdatingId(professionalId);
+      setMessage("");
+
+      await api.patch(`/professionals/${professionalId}/status`, {
+        status,
+      });
+
+      setMessage(
+        status === "active"
+          ? "Profissional ativado com sucesso."
+          : "Profissional inativado com sucesso."
+      );
+
+      await loadProfessionals();
+    } catch (error) {
+      console.error(error);
+
+      setMessage(
+        error.response?.data?.message ||
+          "Erro ao atualizar status do profissional."
+      );
+    } finally {
+      setUpdatingId("");
+    }
+  }
+
+  async function handleDelete(professionalId) {
+    const confirmed = window.confirm(
+      "Deseja realmente excluir este profissional? Se ele possuir agendamentos vinculados, será apenas inativado."
+    );
+
+    if (!confirmed) return;
+
+    try {
+      setUpdatingId(professionalId);
+      setMessage("");
+
+      const response = await api.delete(`/professionals/${professionalId}`);
+
+      setMessage(response.data?.message || "Profissional removido com sucesso.");
+
+      await loadProfessionals();
+    } catch (error) {
+      console.error(error);
+
+      setMessage(
+        error.response?.data?.message || "Erro ao excluir profissional."
+      );
+    } finally {
+      setUpdatingId("");
     }
   }
 
@@ -72,16 +184,30 @@ export default function Professionals() {
 
       <main className="main-content">
         <h1>Profissionais</h1>
-        <p>Cadastre os profissionais que poderão receber agendamentos.</p>
+        <p>
+          Cadastre, edite e gerencie os profissionais que poderão receber
+          agendamentos.
+        </p>
 
         {message && <div className="alert-message">{message}</div>}
 
         <form className="form-card" onSubmit={handleSubmit}>
+          <h2>
+            {editingProfessionalId
+              ? "Editar profissional"
+              : "Novo profissional"}
+          </h2>
+
           <div>
             <label>Nome do profissional</label>
             <input
               value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  name: e.target.value,
+                })
+              }
               placeholder="Ex: João Silva"
               required
             />
@@ -92,7 +218,12 @@ export default function Professionals() {
             <input
               type="email"
               value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  email: e.target.value,
+                })
+              }
               placeholder="Ex: joao@email.com"
             />
           </div>
@@ -101,18 +232,53 @@ export default function Professionals() {
             <label>Telefone</label>
             <input
               value={form.phone}
-              onChange={(e) => setForm({ ...form, phone: e.target.value })}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  phone: e.target.value,
+                })
+              }
               placeholder="Ex: (14) 99999-9999"
             />
           </div>
 
-          <button type="submit" disabled={loading}>
-            {loading ? "Cadastrando..." : "Cadastrar profissional"}
-          </button>
+          <div className="form-actions-row">
+            <button type="submit" disabled={loading}>
+              {loading
+                ? "Salvando..."
+                : editingProfessionalId
+                ? "Salvar alterações"
+                : "Cadastrar profissional"}
+            </button>
+
+            {editingProfessionalId && (
+              <button
+                type="button"
+                className="secondary-action-button"
+                onClick={resetForm}
+                disabled={loading}
+              >
+                Cancelar edição
+              </button>
+            )}
+          </div>
         </form>
 
         <div className="table-card">
-          <h2>Profissionais cadastrados</h2>
+          <div className="table-header-row">
+            <div>
+              <h2>Profissionais cadastrados</h2>
+              <p>Gerencie os profissionais usados no painel e no link público.</p>
+            </div>
+
+            <button
+              type="button"
+              className="secondary-action-button"
+              onClick={loadProfessionals}
+            >
+              Atualizar
+            </button>
+          </div>
 
           <table>
             <thead>
@@ -121,21 +287,82 @@ export default function Professionals() {
                 <th>E-mail</th>
                 <th>Telefone</th>
                 <th>Status</th>
+                <th>Agendamentos</th>
+                <th>Ações</th>
               </tr>
             </thead>
 
             <tbody>
               {professionals.length === 0 ? (
                 <tr>
-                  <td colSpan="4">Nenhum profissional cadastrado.</td>
+                  <td colSpan="6">Nenhum profissional cadastrado.</td>
                 </tr>
               ) : (
                 professionals.map((professional) => (
                   <tr key={professional.id}>
                     <td>{professional.name}</td>
+
                     <td>{professional.email || "—"}</td>
+
                     <td>{professional.phone || "—"}</td>
-                    <td>{professional.status}</td>
+
+                    <td>
+                      <span className={getStatusClass(professional.status)}>
+                        {translateStatus(professional.status)}
+                      </span>
+                    </td>
+
+                    <td>{professional._count?.appointments || 0}</td>
+
+                    <td>
+                      <div className="table-actions">
+                        <button
+                          type="button"
+                          onClick={() => handleEdit(professional)}
+                          disabled={updatingId === professional.id}
+                        >
+                          Editar
+                        </button>
+
+                        {professional.status === "active" ? (
+                          <button
+                            type="button"
+                            className="danger-button"
+                            onClick={() =>
+                              updateProfessionalStatus(
+                                professional.id,
+                                "inactive"
+                              )
+                            }
+                            disabled={updatingId === professional.id}
+                          >
+                            Inativar
+                          </button>
+                        ) : (
+                          <button
+                            type="button"
+                            onClick={() =>
+                              updateProfessionalStatus(
+                                professional.id,
+                                "active"
+                              )
+                            }
+                            disabled={updatingId === professional.id}
+                          >
+                            Ativar
+                          </button>
+                        )}
+
+                        <button
+                          type="button"
+                          className="danger-button"
+                          onClick={() => handleDelete(professional.id)}
+                          disabled={updatingId === professional.id}
+                        >
+                          Excluir
+                        </button>
+                      </div>
+                    </td>
                   </tr>
                 ))
               )}
