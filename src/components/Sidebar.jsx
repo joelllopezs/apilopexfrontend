@@ -132,14 +132,16 @@ export default function Sidebar() {
 
   return (
     <>
-      <button
-        type="button"
-        className="mobile-menu-toggle"
-        onClick={() => setMobileOpen(true)}
-        aria-label="Abrir menu"
-      >
-        <Menu size={22} />
-      </button>
+      {!mobileOpen && (
+  <button
+    type="button"
+    className="mobile-menu-toggle"
+    onClick={() => setMobileOpen(true)}
+    aria-label="Abrir menu"
+  >
+    <Menu size={22} />
+  </button>
+)}
 
       {mobileOpen && (
         <button
