@@ -1570,3 +1570,121 @@ button.primary-button:disabled {
     width: 100%;
   }
 }
+/* =========================
+   HORÁRIOS DE FUNCIONAMENTO
+========================= */
+
+.business-hours-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 8px;
+}
+
+.business-hours-actions-card {
+  margin-bottom: 28px;
+}
+
+.business-hours-actions {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.business-hours-actions button {
+  width: auto;
+  min-height: 44px;
+}
+
+.business-hours-card {
+  max-width: 100%;
+}
+
+.business-hours-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.business-hour-row {
+  display: grid;
+  grid-template-columns: minmax(160px, 1.1fr) 120px repeat(4, minmax(120px, 1fr));
+  gap: 12px;
+  align-items: end;
+  padding: 16px;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.business-hour-day {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.business-hour-day strong {
+  color: var(--text);
+  font-size: 15px;
+}
+
+.business-hour-toggle,
+.business-hour-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.business-hour-toggle label,
+.business-hour-field label {
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.business-hour-toggle select,
+.business-hour-field input {
+  height: 42px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: var(--input-bg);
+  color: var(--text);
+  padding: 0 12px;
+  outline: none;
+}
+
+.business-hour-field input:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+@media (max-width: 1250px) {
+  .business-hour-row {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+
+  .business-hour-day {
+    grid-column: span 3;
+  }
+}
+
+@media (max-width: 760px) {
+  .business-hours-title-row {
+    flex-direction: column;
+  }
+
+  .business-hour-row {
+    grid-template-columns: 1fr;
+  }
+
+  .business-hour-day {
+    grid-column: span 1;
+  }
+
+  .business-hours-actions button,
+  .business-hours-actions .secondary-action-button,
+  .business-hours-title-row .dashboard-refresh-button {
+    width: 100%;
+  }
+}
