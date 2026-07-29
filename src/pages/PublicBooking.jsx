@@ -9,40 +9,37 @@ export default function PublicBooking() {
   const [services, setServices] = useState([]);
   const [professionals, setProfessionals] = useState([]);
   const [availableTimes, setAvailableTimes] = useState([]);
-  const [confirmedAppointment, setConfirmedAppointment] = useState(null);
+
+  const [serviceId, setServiceId] = useState("");
+  const [professionalId, setProfessionalId] = useState("");
+  const [date, setDate] = useState("");
+  const [selectedTime, setSelectedTime] = useState(null);
+
+  const [clientName, setClientName] = useState("");
+  const [clientPhone, setClientPhone] = useState("");
+  const [clientEmail, setClientEmail] = useState("");
+  const [notes, setNotes] = useState("");
 
   const [loading, setLoading] = useState(false);
+  const [loadingTimes, setLoadingTimes] = useState(false);
   const [message, setMessage] = useState("");
+  const [confirmedAppointment, setConfirmedAppointment] = useState(null);
 
-  const [form, setForm] = useState({
-    serviceId: "",
-    professionalId: "",
-    date: "",
-    startTime: "",
-    endTime: "",
-    clientName: "",
-    clientEmail: "",
-    clientPhone: "",
-    notes: "",
-  });
+  function formatDate(value) {
+    if (!value) return "";
 
-  async function loadInitialData() {
+    const [year, month, day] = value.split("-");
+    return `${day}/${month}/${year}`;
+  }
+
+  async function loadCompany() {
     try {
-      setLoading(true);
       setMessage("");
 
-      const [companyResponse, servicesResponse, professionalsResponse] =
-        await Promise.all([
-          api.get(`/public/company/${slug}`),
-          api.get(`/public/company/${slug}/services`),
-          api.get(`/public/company/${slug}/professionals`),
-        ]);
-
-      const companyData = companyResponse.data;
+      const response = await api.get(`/public/company/${slug}`);
+      const companyData = response.data;
 
       setCompany(companyData);
-      setServices(servicesResponse.data);
-      setProfessionals(professionalsResponse.data);
 
       document.documentElement.style.setProperty(
         "--public-primary-color",
@@ -50,166 +47,153 @@ export default function PublicBooking() {
       );
     } catch (error) {
       console.error(error);
+
+      setMessage(
+        error.response?.data?.message || "Empresa não encontrada ou indisponível."
+      );
+    }
+  }
+
+  async function loadServicesAndProfessionals() {
+    try {
+      const [servicesResponse, professionalsResponse] = await Promise.all([
+        api.get(`/public/company/${slug}/services`),
+        api.get(`/public/company/${slug}/professionals`),
+      ]);
+
+      setServices(servicesResponse.data);
+      setProfessionals(professionalsResponse.data);
+    } catch (error) {
+      console.error(error);
+
       setMessage(
         error.response?.data?.message ||
-          "Erro ao carregar página de agendamento."
+          "Erro ao carregar serviços e profissionais."
       );
-    } finally {
-      setLoading(false);
     }
   }
 
   async function loadAvailability() {
-    if (!form.serviceId || !form.professionalId || !form.date) {
-      setAvailableTimes([]);
-      return;
-    }
-
     try {
-      setLoading(true);
+      setLoadingTimes(true);
       setMessage("");
 
-      const response = await api.get(`/public/company/${slug}/availability`, {
-        params: {
-          serviceId: form.serviceId,
-          professionalId: form.professionalId,
-          date: form.date,
-        },
-      });
+      if (!serviceId || !professionalId || !date) {
+        setAvailableTimes([]);
+        setSelectedTime(null);
+        return;
+      }
+
+      const response = await api.get(
+        `/public/company/${slug}/availability?professionalId=${professionalId}&serviceId=${serviceId}&date=${date}`
+      );
 
       setAvailableTimes(response.data.availableTimes || []);
+      setSelectedTime(null);
 
-      setForm((prev) => ({
-        ...prev,
-        startTime: "",
-        endTime: "",
-      }));
-
-      if (!response.data.availableTimes?.length) {
-        setMessage("Nenhum horário disponível para essa data.");
+      if (response.data.message) {
+        setMessage(response.data.message);
       }
     } catch (error) {
       console.error(error);
+
+      setAvailableTimes([]);
+      setSelectedTime(null);
+
       setMessage(
-        error.response?.data?.message || "Erro ao buscar disponibilidade."
+        error.response?.data?.message || "Erro ao buscar horários disponíveis."
       );
     } finally {
-      setLoading(false);
+      setLoadingTimes(false);
     }
   }
 
-  function handleSelectTime(time) {
-    setForm((prev) => ({
-      ...prev,
-      startTime: time.startTime,
-      endTime: time.endTime,
-    }));
-  }
-
-  function getSelectedServiceName() {
-    return services.find((service) => service.id === form.serviceId)?.name || "";
-  }
-
-  function getSelectedProfessionalName() {
-    return (
-      professionals.find(
-        (professional) => professional.id === form.professionalId
-      )?.name || ""
-    );
-  }
-
-  function formatDate(dateString) {
-    if (!dateString) return "";
-
-    const [year, month, day] = dateString.split("-");
-    return `${day}/${month}/${year}`;
-  }
-
-  async function handleSubmit(e) {
-    e.preventDefault();
-
-    if (!form.startTime || !form.endTime) {
-      setMessage("Selecione um horário disponível.");
-      return;
-    }
+  async function handleSubmit(event) {
+    event.preventDefault();
 
     try {
       setLoading(true);
       setMessage("");
 
+      if (
+        !serviceId ||
+        !professionalId ||
+        !date ||
+        !selectedTime ||
+        !clientName ||
+        !clientPhone
+      ) {
+        setMessage("Preencha os campos obrigatórios e selecione um horário.");
+        return;
+      }
+
+      const service = services.find((item) => item.id === serviceId);
+      const professional = professionals.find((item) => item.id === professionalId);
+
       const response = await api.post(`/public/company/${slug}/appointments`, {
-        serviceId: form.serviceId,
-        professionalId: form.professionalId,
-        date: form.date,
-        startTime: form.startTime,
-        endTime: form.endTime,
-        clientName: form.clientName,
-        clientEmail: form.clientEmail || null,
-        clientPhone: form.clientPhone || null,
-        notes: form.notes || null,
+        serviceId,
+        professionalId,
+        date,
+        startTime: selectedTime.startTime,
+        endTime: selectedTime.endTime,
+        client: {
+          name: clientName,
+          phone: clientPhone,
+          email: clientEmail || null,
+        },
+        notes: notes || null,
       });
 
       setConfirmedAppointment({
-        ...response.data.appointment,
-        serviceName: getSelectedServiceName(),
-        professionalName: getSelectedProfessionalName(),
-        formattedDate: formatDate(form.date),
-        clientName: form.clientName,
-        clientPhone: form.clientPhone,
+        ...response.data,
+        clientName,
+        clientPhone,
+        clientEmail,
+        serviceName: service?.name || "Serviço",
+        professionalName: professional?.name || "Profissional",
+        date,
+        formattedDate: formatDate(date),
+        startTime: selectedTime.startTime,
+        endTime: selectedTime.endTime,
       });
 
-      setMessage("");
-
-      setForm({
-        serviceId: "",
-        professionalId: "",
-        date: "",
-        startTime: "",
-        endTime: "",
-        clientName: "",
-        clientEmail: "",
-        clientPhone: "",
-        notes: "",
-      });
-
+      setServiceId("");
+      setProfessionalId("");
+      setDate("");
+      setSelectedTime(null);
       setAvailableTimes([]);
+      setClientName("");
+      setClientPhone("");
+      setClientEmail("");
+      setNotes("");
     } catch (error) {
       console.error(error);
-      setMessage(
-        error.response?.data?.message || "Erro ao realizar agendamento."
-      );
+
+      setMessage(error.response?.data?.message || "Erro ao confirmar agendamento.");
     } finally {
       setLoading(false);
     }
   }
 
-  function handleNewAppointment() {
-    setConfirmedAppointment(null);
-    setMessage("");
-  }
-
   useEffect(() => {
-    loadInitialData();
+    loadCompany();
+    loadServicesAndProfessionals();
   }, [slug]);
 
   useEffect(() => {
     loadAvailability();
-  }, [form.serviceId, form.professionalId, form.date]);
+  }, [serviceId, professionalId, date]);
 
   if (confirmedAppointment) {
     return (
       <div className="public-booking-page">
         <div className="public-booking-card success-card">
-          <header className="public-booking-header">
+          <div className="public-booking-header">
             <div className="public-company-logo">
               {company?.logoUrl ? (
                 <img src={company.logoUrl} alt={company.name} />
               ) : (
-                <span>
-                  {company?.name
-                    ? company.name.slice(0, 2).toUpperCase()
-                    : "LX"}
-                </span>
+                <span>{company?.name?.slice(0, 2).toUpperCase() || "LX"}</span>
               )}
             </div>
 
@@ -217,7 +201,7 @@ export default function PublicBooking() {
               <h1>Agendamento confirmado!</h1>
               <p>Seu horário foi registrado com sucesso.</p>
             </div>
-          </header>
+          </div>
 
           <div className="booking-success-box">
             <h2>{company?.name}</h2>
@@ -245,23 +229,20 @@ export default function PublicBooking() {
             <div className="booking-success-row">
               <span>Horário</span>
               <strong>
-                {confirmedAppointment.startTime} às{" "}
-                {confirmedAppointment.endTime}
+                {confirmedAppointment.startTime} às {confirmedAppointment.endTime}
               </strong>
             </div>
 
-            {confirmedAppointment.clientPhone && (
-              <div className="booking-success-row">
-                <span>Contato</span>
-                <strong>{confirmedAppointment.clientPhone}</strong>
-              </div>
-            )}
+            <div className="booking-success-row">
+              <span>Contato</span>
+              <strong>{confirmedAppointment.clientPhone}</strong>
+            </div>
           </div>
 
           <button
             type="button"
             className="public-submit-button"
-            onClick={handleNewAppointment}
+            onClick={() => setConfirmedAppointment(null)}
           >
             Fazer novo agendamento
           </button>
@@ -273,176 +254,149 @@ export default function PublicBooking() {
   return (
     <div className="public-booking-page">
       <div className="public-booking-card">
-        <header className="public-booking-header">
+        <div className="public-booking-header">
           <div className="public-company-logo">
             {company?.logoUrl ? (
               <img src={company.logoUrl} alt={company.name} />
             ) : (
-              <span>
-                {company?.name ? company.name.slice(0, 2).toUpperCase() : "LX"}
-              </span>
+              <span>{company?.name?.slice(0, 2).toUpperCase() || "LX"}</span>
             )}
           </div>
 
           <div>
-            <h1>{company?.name || "Agendamento"}</h1>
-            <p>Escolha o serviço, data e horário para agendar.</p>
+            <h1>{company?.name || "Agendamento online"}</h1>
+            <p>Escolha o serviço, profissional, data e horário.</p>
           </div>
-        </header>
+        </div>
 
         {message && <div className="public-alert">{message}</div>}
 
-        {loading && <div className="public-alert">Carregando...</div>}
-
         <form className="public-booking-form" onSubmit={handleSubmit}>
-          <div className="public-form-section">
-            <h2>1. Escolha o atendimento</h2>
+          <section className="public-form-section">
+            <h2>1. Escolha o serviço</h2>
 
             <label>Serviço</label>
             <select
-              value={form.serviceId}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  serviceId: e.target.value,
-                  startTime: "",
-                  endTime: "",
-                })
-              }
+              value={serviceId}
+              onChange={(event) => setServiceId(event.target.value)}
               required
             >
               <option value="">Selecione um serviço</option>
+
               {services.map((service) => (
                 <option key={service.id} value={service.id}>
-                  {service.name} — {service.duration} min
+                  {service.name} - {service.duration} min
+                  {service.price ? ` - R$ ${Number(service.price).toFixed(2)}` : ""}
                 </option>
               ))}
             </select>
+          </section>
+
+          <section className="public-form-section">
+            <h2>2. Escolha o profissional</h2>
 
             <label>Profissional</label>
             <select
-              value={form.professionalId}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  professionalId: e.target.value,
-                  startTime: "",
-                  endTime: "",
-                })
-              }
+              value={professionalId}
+              onChange={(event) => setProfessionalId(event.target.value)}
               required
             >
               <option value="">Selecione um profissional</option>
+
               {professionals.map((professional) => (
                 <option key={professional.id} value={professional.id}>
                   {professional.name}
                 </option>
               ))}
             </select>
+          </section>
+
+          <section className="public-form-section">
+            <h2>3. Escolha a data</h2>
 
             <label>Data</label>
             <input
               type="date"
-              value={form.date}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  date: e.target.value,
-                  startTime: "",
-                  endTime: "",
-                })
-              }
+              value={date}
+              onChange={(event) => setDate(event.target.value)}
               required
             />
-          </div>
+          </section>
 
-          <div className="public-form-section">
-            <h2>2. Escolha o horário</h2>
+          <section className="public-form-section">
+            <h2>4. Escolha o horário</h2>
 
-            {availableTimes.length === 0 ? (
-              <p className="public-muted">
-                Selecione serviço, profissional e data para ver horários.
-              </p>
-            ) : (
-              <div className="public-time-grid">
-                {availableTimes.map((time) => (
-                  <button
-                    key={`${time.startTime}-${time.endTime}`}
-                    type="button"
-                    className={
-                      form.startTime === time.startTime
-                        ? "public-time-button selected"
-                        : "public-time-button"
-                    }
-                    onClick={() => handleSelectTime(time)}
-                  >
-                    {time.startTime}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+            <div className="public-time-grid">
+              {!serviceId || !professionalId || !date ? (
+                <p className="public-muted">
+                  Selecione serviço, profissional e data para ver os horários.
+                </p>
+              ) : loadingTimes ? (
+                <p className="public-muted">Buscando horários...</p>
+              ) : availableTimes.length === 0 ? (
+                <p className="public-muted">
+                  Nenhum horário disponível para essa data.
+                </p>
+              ) : (
+                availableTimes.map((time) => {
+                  const active = selectedTime?.startTime === time.startTime;
 
-          <div className="public-form-section">
-            <h2>3. Seus dados</h2>
-
-            <label>Nome</label>
-            <input
-              value={form.clientName}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  clientName: e.target.value,
+                  return (
+                    <button
+                      key={`${time.startTime}-${time.endTime}`}
+                      type="button"
+                      className={
+                        active
+                          ? "public-time-button selected"
+                          : "public-time-button"
+                      }
+                      onClick={() => setSelectedTime(time)}
+                    >
+                      {time.startTime}
+                    </button>
+                  );
                 })
-              }
+              )}
+            </div>
+          </section>
+
+          <section className="public-form-section">
+            <h2>5. Seus dados</h2>
+
+            <label>Nome completo</label>
+            <input
+              value={clientName}
+              onChange={(event) => setClientName(event.target.value)}
               placeholder="Seu nome"
               required
             />
 
-            <label>WhatsApp / Telefone</label>
+            <label>WhatsApp</label>
             <input
-              value={form.clientPhone}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  clientPhone: e.target.value,
-                })
-              }
+              value={clientPhone}
+              onChange={(event) => setClientPhone(event.target.value)}
               placeholder="(14) 99999-9999"
+              required
             />
 
             <label>E-mail</label>
             <input
               type="email"
-              value={form.clientEmail}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  clientEmail: e.target.value,
-                })
-              }
+              value={clientEmail}
+              onChange={(event) => setClientEmail(event.target.value)}
               placeholder="seuemail@email.com"
             />
 
             <label>Observações</label>
             <textarea
-              value={form.notes}
-              onChange={(e) =>
-                setForm({
-                  ...form,
-                  notes: e.target.value,
-                })
-              }
-              placeholder="Alguma observação para o atendimento?"
+              value={notes}
+              onChange={(event) => setNotes(event.target.value)}
+              placeholder="Digite alguma observação, se necessário"
             />
-          </div>
+          </section>
 
-          <button
-            className="public-submit-button"
-            type="submit"
-            disabled={loading}
-          >
-            {loading ? "Agendando..." : "Confirmar agendamento"}
+          <button type="submit" className="public-submit-button" disabled={loading}>
+            {loading ? "Confirmando..." : "Confirmar agendamento"}
           </button>
         </form>
       </div>
