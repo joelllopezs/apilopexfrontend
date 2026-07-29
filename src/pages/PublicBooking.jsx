@@ -49,7 +49,8 @@ export default function PublicBooking() {
       console.error(error);
 
       setMessage(
-        error.response?.data?.message || "Empresa não encontrada ou indisponível."
+        error.response?.data?.message ||
+          "Empresa não encontrada ou indisponível."
       );
     }
   }
@@ -115,20 +116,26 @@ export default function PublicBooking() {
       setLoading(true);
       setMessage("");
 
+      const trimmedClientName = clientName.trim();
+      const trimmedClientPhone = clientPhone.trim();
+      const trimmedClientEmail = clientEmail.trim();
+
       if (
         !serviceId ||
         !professionalId ||
         !date ||
         !selectedTime ||
-        !clientName ||
-        !clientPhone
+        !trimmedClientName ||
+        !trimmedClientPhone
       ) {
         setMessage("Preencha os campos obrigatórios e selecione um horário.");
         return;
       }
 
       const service = services.find((item) => item.id === serviceId);
-      const professional = professionals.find((item) => item.id === professionalId);
+      const professional = professionals.find(
+        (item) => item.id === professionalId
+      );
 
       const response = await api.post(`/public/company/${slug}/appointments`, {
         serviceId,
@@ -136,19 +143,19 @@ export default function PublicBooking() {
         date,
         startTime: selectedTime.startTime,
         endTime: selectedTime.endTime,
-        client: {
-          name: clientName,
-          phone: clientPhone,
-          email: clientEmail || null,
-        },
-        notes: notes || null,
+
+        clientName: trimmedClientName,
+        clientPhone: trimmedClientPhone,
+        clientEmail: trimmedClientEmail || null,
+
+        notes: notes.trim() || null,
       });
 
       setConfirmedAppointment({
         ...response.data,
-        clientName,
-        clientPhone,
-        clientEmail,
+        clientName: trimmedClientName,
+        clientPhone: trimmedClientPhone,
+        clientEmail: trimmedClientEmail,
         serviceName: service?.name || "Serviço",
         professionalName: professional?.name || "Profissional",
         date,
@@ -169,7 +176,9 @@ export default function PublicBooking() {
     } catch (error) {
       console.error(error);
 
-      setMessage(error.response?.data?.message || "Erro ao confirmar agendamento.");
+      setMessage(
+        error.response?.data?.message || "Erro ao confirmar agendamento."
+      );
     } finally {
       setLoading(false);
     }
@@ -229,7 +238,8 @@ export default function PublicBooking() {
             <div className="booking-success-row">
               <span>Horário</span>
               <strong>
-                {confirmedAppointment.startTime} às {confirmedAppointment.endTime}
+                {confirmedAppointment.startTime} às{" "}
+                {confirmedAppointment.endTime}
               </strong>
             </div>
 
@@ -286,7 +296,9 @@ export default function PublicBooking() {
               {services.map((service) => (
                 <option key={service.id} value={service.id}>
                   {service.name} - {service.duration} min
-                  {service.price ? ` - R$ ${Number(service.price).toFixed(2)}` : ""}
+                  {service.price
+                    ? ` - R$ ${Number(service.price).toFixed(2)}`
+                    : ""}
                 </option>
               ))}
             </select>
@@ -395,7 +407,11 @@ export default function PublicBooking() {
             />
           </section>
 
-          <button type="submit" className="public-submit-button" disabled={loading}>
+          <button
+            type="submit"
+            className="public-submit-button"
+            disabled={loading}
+          >
             {loading ? "Confirmando..." : "Confirmar agendamento"}
           </button>
         </form>
