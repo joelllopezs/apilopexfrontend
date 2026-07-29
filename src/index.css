@@ -1688,3 +1688,111 @@ button.primary-button:disabled {
     width: 100%;
   }
 }
+
+/* =========================
+   EMPRESA / IDENTIDADE
+========================= */
+
+.company-title-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 8px;
+}
+
+.slug-input-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+}
+
+.slug-input-row .secondary-action-button {
+  min-height: 46px;
+}
+
+.field-help {
+  display: block;
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+.color-input-row {
+  display: grid;
+  grid-template-columns: 70px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+}
+
+.color-input-row input[type="color"] {
+  width: 70px;
+  height: 46px;
+  padding: 4px;
+  cursor: pointer;
+}
+
+.public-link-box {
+  width: 100%;
+  margin-top: 18px;
+  padding: 16px;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.public-link-box label {
+  display: block;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 800;
+  margin-bottom: 8px;
+}
+
+.public-link-value {
+  width: 100%;
+  overflow-wrap: anywhere;
+  color: var(--text);
+  font-size: 14px;
+  line-height: 1.45;
+  padding: 12px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.18);
+  border: 1px solid var(--border);
+}
+
+.public-link-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 12px;
+  flex-wrap: wrap;
+}
+
+.public-link-actions button {
+  width: auto;
+}
+
+@media (max-width: 900px) {
+  .company-title-row {
+    flex-direction: column;
+  }
+
+  .company-title-row .dashboard-refresh-button {
+    width: 100%;
+  }
+}
+
+@media (max-width: 620px) {
+  .slug-input-row,
+  .color-input-row {
+    grid-template-columns: 1fr;
+  }
+
+  .color-input-row input[type="color"] {
+    width: 100%;
+  }
+
+  .public-link-actions button {
+    width: 100%;
+  }
+}
