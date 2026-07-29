@@ -5,114 +5,183 @@ import api from "../api/api";
 export default function Login() {
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState("lucas@lopex.ia");
-  const [password, setPassword] = useState("123456");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
+
+  function clearSession() {
+    localStorage.removeItem("@lopex:token");
+    localStorage.removeItem("@lopex:user");
+    localStorage.removeItem("@lopex:company");
+  }
+
+  function getFriendlyError(error) {
+    const apiMessage = error.response?.data?.message;
+
+    if (!apiMessage) {
+      return "Não foi possível fazer login. Verifique sua conexão e tente novamente.";
+    }
+
+    if (apiMessage.toLowerCase().includes("empresa inativa")) {
+      return "Sua empresa ainda está aguardando liberação do Admin Master.";
+    }
+
+    if (apiMessage.toLowerCase().includes("usuário inativo")) {
+      return "Seu usuário está inativo. Entre em contato com o administrador.";
+    }
+
+    if (
+      apiMessage.toLowerCase().includes("senha inválidos") ||
+      apiMessage.toLowerCase().includes("senha inválida") ||
+      apiMessage.toLowerCase().includes("e-mail ou senha")
+    ) {
+      return "E-mail ou senha inválidos.";
+    }
+
+    return apiMessage;
+  }
 
   async function handleLogin(event) {
     event.preventDefault();
 
     try {
       setLoading(true);
-      setError("");
+      setMessage("");
+      clearSession();
+
+      if (!email.trim() || !password) {
+        setMessage("Informe e-mail e senha para entrar.");
+        return;
+      }
 
       const response = await api.post("/auth/login", {
-        email,
+        email: email.trim().toLowerCase(),
         password,
       });
 
+      const user = response.data.user;
+
       localStorage.setItem("@lopex:token", response.data.token);
-      localStorage.setItem("@lopex:user", JSON.stringify(response.data.user));
+      localStorage.setItem("@lopex:user", JSON.stringify(user));
+
+      if (user.company) {
+        localStorage.setItem("@lopex:company", JSON.stringify(user.company));
+
+        if (user.company.primaryColor) {
+          document.documentElement.style.setProperty(
+            "--primary-color",
+            user.company.primaryColor
+          );
+        }
+      }
+
+      if (user.role === "super_admin") {
+        navigate("/admin");
+        return;
+      }
 
       navigate("/dashboard");
-    } catch (err) {
-      setError(err.response?.data?.message || "Erro ao fazer login.");
+    } catch (error) {
+      console.error(error);
+
+      clearSession();
+      setMessage(getFriendlyError(error));
     } finally {
       setLoading(false);
     }
   }
 
   return (
-    <main
-      className="page"
-      style={{
-        display: "grid",
-        placeItems: "center",
-        padding: 24,
-      }}
-    >
-      <form
-        onSubmit={handleLogin}
-        className="card"
-        style={{
-          width: "100%",
-          maxWidth: 420,
-        }}
-      >
-        <div style={{ textAlign: "center", marginBottom: 28 }}>
-          <div
-            style={{
-              fontSize: 42,
-              fontWeight: 900,
-              letterSpacing: -2,
-            }}
-          >
-            <span style={{ color: "#fff" }}>L</span>
-            <span style={{ color: "#885AFE" }}>X</span>
+    <main className="login-page">
+      <section className="login-shell">
+        <div className="login-side-panel">
+          <div className="login-side-brand">
+            <div className="brand-icon">LX</div>
+
+            <div>
+              <strong>LopeX Agenda</strong>
+              <span>Sistema de agendamentos online</span>
+            </div>
           </div>
 
-          <h1 style={{ margin: "12px 0 6px" }}>Lopex Agenda</h1>
-          <p style={{ color: "#b8b8c8", margin: 0 }}>
-            Acesse o painel de agendamentos
-          </p>
+          <div className="login-side-content">
+            <h1>Organize sua agenda em poucos cliques.</h1>
+
+            <p>
+              Cadastre serviços, profissionais, horários de funcionamento e
+              receba agendamentos pelo link público da sua empresa.
+            </p>
+
+            <div className="login-benefits">
+              <div>
+                <strong>✓</strong>
+                <span>Link público de agendamento</span>
+              </div>
+
+              <div>
+                <strong>✓</strong>
+                <span>Painel com status dos horários</span>
+              </div>
+
+              <div>
+                <strong>✓</strong>
+                <span>Controle por empresa com Admin Master</span>
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div className="grid">
-          <label>
-            <span style={{ display: "block", marginBottom: 8 }}>E-mail</span>
+        <form onSubmit={handleLogin} className="login-card">
+          <div className="login-brand">
+            <div className="brand-icon">LX</div>
+
+            <div>
+              <h1>Entrar no painel</h1>
+              <p>Acesse sua conta para gerenciar agendamentos.</p>
+            </div>
+          </div>
+
+          {message && <div className="alert-message">{message}</div>}
+
+          <div className="login-form">
+            <label>E-mail</label>
             <input
-              className="input"
               type="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
-              placeholder="admin@lopex.ia"
+              placeholder="seuemail@empresa.com"
+              required
             />
-          </label>
 
-          <label>
-            <span style={{ display: "block", marginBottom: 8 }}>Senha</span>
+            <label>Senha</label>
             <input
-              className="input"
               type="password"
               value={password}
               onChange={(event) => setPassword(event.target.value)}
-              placeholder="Sua senha"
+              placeholder="Digite sua senha"
+              required
             />
-          </label>
 
-          {error && (
-            <div
-              style={{
-                color: "#ff6b6b",
-                background: "rgba(255, 107, 107, 0.1)",
-                padding: 12,
-                borderRadius: 12,
-              }}
-            >
-              {error}
-            </div>
-          )}
+            <button type="submit" disabled={loading}>
+              {loading ? "Entrando..." : "Entrar"}
+            </button>
+          </div>
 
-          <button className="button" type="submit" disabled={loading}>
-            {loading ? "Entrando..." : "Entrar"}
-          </button>
+          <div className="login-divider">
+            <span>ou</span>
+          </div>
 
-<p className="login-footer">
-  Ainda não tem conta? <Link to="/register-company">Cadastrar empresa</Link>
-</p>
-        </div>
-      </form>
+          <Link to="/register-company" className="create-account-button">
+            Cadastrar minha empresa
+          </Link>
+
+          <p className="login-footer">
+            Empresa aguardando liberação? Depois que o Admin Master ativar, você
+            poderá entrar normalmente.
+          </p>
+        </form>
+      </section>
     </main>
   );
 }
