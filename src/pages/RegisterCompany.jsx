@@ -1,14 +1,12 @@
 import { useState } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import api from "../api/api";
 
 export default function RegisterCompany() {
-  const navigate = useNavigate();
-
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
 
-  const [form, setForm] = useState({
+  const initialForm = {
     userName: "",
     userEmail: "",
     password: "",
@@ -18,7 +16,9 @@ export default function RegisterCompany() {
     companyEmail: "",
     companyPhone: "",
     primaryColor: "#885AFE",
-  });
+  };
+
+  const [form, setForm] = useState(initialForm);
 
   function generateSlug(value) {
     return value
@@ -186,19 +186,13 @@ export default function RegisterCompany() {
         primaryColor: form.primaryColor || "#885AFE",
       };
 
-      const response = await api.post("/auth/register-company", payload);
+      await api.post("/auth/register-company", payload);
 
-      localStorage.setItem("@lopex:token", response.data.token);
-      localStorage.setItem("@lopex:user", JSON.stringify(response.data.user));
+      setForm(initialForm);
 
-      if (response.data.company) {
-        localStorage.setItem(
-          "@lopex:company",
-          JSON.stringify(response.data.company)
-        );
-      }
-
-      navigate("/dashboard");
+      setMessage(
+        "Cadastro realizado com sucesso. Sua empresa está aguardando liberação do Admin Master. Após a liberação, você poderá entrar no painel."
+      );
     } catch (error) {
       console.error(error);
       console.log("ERRO API:", error.response?.data);
