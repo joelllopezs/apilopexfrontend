@@ -16,18 +16,43 @@ export default function Appointments() {
   const [selectedTime, setSelectedTime] = useState(null);
 
   const [loading, setLoading] = useState(false);
+  const [loadingAvailability, setLoadingAvailability] = useState(false);
   const [message, setMessage] = useState("");
+
+  function translateStatus(status) {
+    const statusMap = {
+      pending: "Pendente",
+      confirmed: "Confirmado",
+      cancelled: "Cancelado",
+      completed: "Concluído",
+    };
+
+    return statusMap[status] || status;
+  }
+
+  function getStatusClass(status) {
+    const statusClassMap = {
+      pending: "status-badge pending",
+      confirmed: "status-badge active",
+      cancelled: "status-badge blocked",
+      completed: "status-badge completed",
+    };
+
+    return statusClassMap[status] || "status-badge";
+  }
 
   async function loadInitialData() {
     try {
+      setMessage("");
+
       const [
         servicesResponse,
         professionalsResponse,
         clientsResponse,
         appointmentsResponse,
       ] = await Promise.all([
-        api.get("/services"),
-        api.get("/professionals"),
+        api.get("/services?status=active"),
+        api.get("/professionals?status=active"),
         api.get("/clients"),
         api.get("/appointments"),
       ]);
@@ -38,6 +63,7 @@ export default function Appointments() {
       setAppointments(appointmentsResponse.data);
     } catch (error) {
       console.error(error);
+
       setMessage(
         error.response?.data?.message || "Erro ao carregar dados da agenda."
       );
@@ -46,22 +72,36 @@ export default function Appointments() {
 
   async function loadAvailability() {
     try {
-      if (!professionalId || !date) {
+      setLoadingAvailability(true);
+      setMessage("");
+
+      if (!serviceId || !professionalId || !date) {
         setAvailableTimes([]);
+        setSelectedTime(null);
         return;
       }
 
       const response = await api.get(
-        `/availability?professionalId=${professionalId}&date=${date}`
+        `/availability?professionalId=${professionalId}&serviceId=${serviceId}&date=${date}`
       );
 
       setAvailableTimes(response.data.availableTimes || []);
       setSelectedTime(null);
+
+      if (response.data.message) {
+        setMessage(response.data.message);
+      }
     } catch (error) {
       console.error(error);
+
+      setAvailableTimes([]);
+      setSelectedTime(null);
+
       setMessage(
         error.response?.data?.message || "Erro ao buscar disponibilidade."
       );
+    } finally {
+      setLoadingAvailability(false);
     }
   }
 
@@ -91,14 +131,37 @@ export default function Appointments() {
       setServiceId("");
       setProfessionalId("");
       setClientId("");
+      setAvailableTimes([]);
 
-      await loadAvailability();
       await loadInitialData();
     } catch (error) {
       console.error(error);
+
       setMessage(error.response?.data?.message || "Erro ao criar agendamento.");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function updateAppointmentStatus(appointmentId, status) {
+    try {
+      setMessage("");
+
+      await api.patch(`/appointments/${appointmentId}/status`, {
+        status,
+      });
+
+      setMessage("Status do agendamento atualizado com sucesso.");
+
+      await loadInitialData();
+      await loadAvailability();
+    } catch (error) {
+      console.error(error);
+
+      setMessage(
+        error.response?.data?.message ||
+          "Erro ao atualizar status do agendamento."
+      );
     }
   }
 
@@ -108,7 +171,7 @@ export default function Appointments() {
 
   useEffect(() => {
     loadAvailability();
-  }, [professionalId, date]);
+  }, [serviceId, professionalId, date]);
 
   return (
     <div className="app-layout">
@@ -131,6 +194,7 @@ export default function Appointments() {
                 onChange={(event) => setServiceId(event.target.value)}
               >
                 <option value="">Selecione um serviço</option>
+
                 {services.map((service) => (
                   <option key={service.id} value={service.id}>
                     {service.name} - {service.duration} min
@@ -146,6 +210,7 @@ export default function Appointments() {
                 onChange={(event) => setProfessionalId(event.target.value)}
               >
                 <option value="">Selecione um profissional</option>
+
                 {professionals.map((professional) => (
                   <option key={professional.id} value={professional.id}>
                     {professional.name}
@@ -161,6 +226,7 @@ export default function Appointments() {
                 onChange={(event) => setClientId(event.target.value)}
               >
                 <option value="">Selecione um cliente</option>
+
                 {clients.map((client) => (
                   <option key={client.id} value={client.id}>
                     {client.name}
@@ -182,7 +248,13 @@ export default function Appointments() {
               <label>Horários disponíveis</label>
 
               <div className="time-grid">
-                {availableTimes.length === 0 ? (
+                {!serviceId || !professionalId || !date ? (
+                  <p className="empty-message">
+                    Selecione serviço, profissional e data para buscar horários.
+                  </p>
+                ) : loadingAvailability ? (
+                  <p className="empty-message">Buscando horários...</p>
+                ) : availableTimes.length === 0 ? (
                   <p className="empty-message">
                     Nenhum horário disponível para essa data.
                   </p>
@@ -221,27 +293,81 @@ export default function Appointments() {
                   <th>Data</th>
                   <th>Horário</th>
                   <th>Cliente</th>
+                  <th>Serviço</th>
                   <th>Status</th>
+                  <th>Ações</th>
                 </tr>
               </thead>
 
               <tbody>
                 {appointments.length === 0 ? (
                   <tr>
-                    <td colSpan="4">Nenhum agendamento cadastrado.</td>
+                    <td colSpan="6">Nenhum agendamento cadastrado.</td>
                   </tr>
                 ) : (
                   appointments.map((appointment) => (
                     <tr key={appointment.id}>
                       <td>{appointment.date}</td>
+
                       <td>
                         {appointment.startTime} - {appointment.endTime}
                       </td>
+
                       <td>{appointment.client?.name || "—"}</td>
+
+                      <td>{appointment.service?.name || "—"}</td>
+
                       <td>
-                        <span className="status-badge active">
-                          {appointment.status}
+                        <span className={getStatusClass(appointment.status)}>
+                          {translateStatus(appointment.status)}
                         </span>
+                      </td>
+
+                      <td>
+                        <div className="table-actions">
+                          {appointment.status !== "confirmed" && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                updateAppointmentStatus(
+                                  appointment.id,
+                                  "confirmed"
+                                )
+                              }
+                            >
+                              Confirmar
+                            </button>
+                          )}
+
+                          {appointment.status !== "completed" && (
+                            <button
+                              type="button"
+                              onClick={() =>
+                                updateAppointmentStatus(
+                                  appointment.id,
+                                  "completed"
+                                )
+                              }
+                            >
+                              Concluir
+                            </button>
+                          )}
+
+                          {appointment.status !== "cancelled" && (
+                            <button
+                              type="button"
+                              className="danger-button"
+                              onClick={() =>
+                                updateAppointmentStatus(
+                                  appointment.id,
+                                  "cancelled"
+                                )
+                              }
+                            >
+                              Cancelar
+                            </button>
+                          )}
+                        </div>
                       </td>
                     </tr>
                   ))

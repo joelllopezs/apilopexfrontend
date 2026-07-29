@@ -1293,3 +1293,18 @@ button.primary-button:disabled {
     display: none;
   }
 }
+.status-badge.pending {
+  background: rgba(255, 193, 7, 0.14);
+  color: #ffe08a;
+  border: 1px solid rgba(255, 193, 7, 0.35);
+}
+
+.status-badge.completed {
+  background: rgba(136, 90, 254, 0.16);
+  color: #cabaff;
+  border: 1px solid rgba(136, 90, 254, 0.38);
+}
+
+.appointments-table-card table {
+  min-width: 820px;
+}
