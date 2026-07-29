@@ -1502,3 +1502,71 @@ button.primary-button:disabled {
     width: 100%;
   }
 }
+
+/* =========================
+   SERVIÇOS / TELAS DE CRUD
+========================= */
+
+.form-card h2 {
+  margin: 0;
+  color: var(--text);
+  font-size: 22px;
+}
+
+.form-actions-row {
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 12px !important;
+  align-items: center !important;
+  flex-wrap: wrap !important;
+}
+
+.form-actions-row button {
+  width: auto;
+}
+
+.secondary-action-button {
+  min-height: 44px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--primary-color) 35%, transparent);
+  background: rgba(255, 255, 255, 0.04);
+  color: #ffffff;
+  font-weight: 800;
+  padding: 0 16px;
+}
+
+.secondary-action-button:hover {
+  background: color-mix(in srgb, var(--primary-color) 18%, transparent);
+}
+
+.table-header-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 18px;
+  margin-bottom: 18px;
+}
+
+.table-header-row h2 {
+  margin: 0 0 6px;
+}
+
+.table-header-row p {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+@media (max-width: 700px) {
+  .table-header-row {
+    flex-direction: column;
+  }
+
+  .secondary-action-button {
+    width: 100%;
+  }
+
+  .form-actions-row button {
+    width: 100%;
+  }
+}
