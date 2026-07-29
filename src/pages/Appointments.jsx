@@ -19,29 +19,50 @@ export default function Appointments() {
   const [message, setMessage] = useState("");
 
   async function loadInitialData() {
-    const [servicesResponse, professionalsResponse, clientsResponse, appointmentsResponse] =
-      await Promise.all([
+    try {
+      const [
+        servicesResponse,
+        professionalsResponse,
+        clientsResponse,
+        appointmentsResponse,
+      ] = await Promise.all([
         api.get("/services"),
         api.get("/professionals"),
         api.get("/clients"),
         api.get("/appointments"),
       ]);
 
-    setServices(servicesResponse.data);
-    setProfessionals(professionalsResponse.data);
-    setClients(clientsResponse.data);
-    setAppointments(appointmentsResponse.data);
+      setServices(servicesResponse.data);
+      setProfessionals(professionalsResponse.data);
+      setClients(clientsResponse.data);
+      setAppointments(appointmentsResponse.data);
+    } catch (error) {
+      console.error(error);
+      setMessage(
+        error.response?.data?.message || "Erro ao carregar dados da agenda."
+      );
+    }
   }
 
   async function loadAvailability() {
-    if (!professionalId || !date) return;
+    try {
+      if (!professionalId || !date) {
+        setAvailableTimes([]);
+        return;
+      }
 
-    const response = await api.get(
-      `/availability?professionalId=${professionalId}&date=${date}`
-    );
+      const response = await api.get(
+        `/availability?professionalId=${professionalId}&date=${date}`
+      );
 
-    setAvailableTimes(response.data.availableTimes || []);
-    setSelectedTime(null);
+      setAvailableTimes(response.data.availableTimes || []);
+      setSelectedTime(null);
+    } catch (error) {
+      console.error(error);
+      setMessage(
+        error.response?.data?.message || "Erro ao buscar disponibilidade."
+      );
+    }
   }
 
   async function createAppointment() {
@@ -65,10 +86,16 @@ export default function Appointments() {
       });
 
       setMessage("Agendamento criado com sucesso.");
+
       setSelectedTime(null);
+      setServiceId("");
+      setProfessionalId("");
+      setClientId("");
+
       await loadAvailability();
       await loadInitialData();
     } catch (error) {
+      console.error(error);
       setMessage(error.response?.data?.message || "Erro ao criar agendamento.");
     } finally {
       setLoading(false);
@@ -84,104 +111,83 @@ export default function Appointments() {
   }, [professionalId, date]);
 
   return (
-    <div className="layout">
+    <div className="app-layout">
       <Sidebar />
 
-      <main className="content">
+      <main className="main-content">
         <h1>Agenda</h1>
-        <p style={{ color: "#b8b8c8" }}>
-          Consulte horários disponíveis e crie agendamentos.
-        </p>
+        <p>Consulte horários disponíveis e crie agendamentos.</p>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "1.1fr 1fr",
-            gap: 20,
-            marginTop: 24,
-          }}
-        >
-          <section className="card">
+        {message && <div className="alert-message">{message}</div>}
+
+        <div className="appointments-grid">
+          <section className="form-card">
             <h2>Novo agendamento</h2>
 
-            <div className="grid">
-              <label>
-                <span style={{ display: "block", marginBottom: 8 }}>Serviço</span>
-                <select
-                  className="input"
-                  value={serviceId}
-                  onChange={(event) => setServiceId(event.target.value)}
-                >
-                  <option value="">Selecione um serviço</option>
-                  {services.map((service) => (
-                    <option key={service.id} value={service.id}>
-                      {service.name} - {service.duration} min
-                    </option>
-                  ))}
-                </select>
-              </label>
+            <div>
+              <label>Serviço</label>
+              <select
+                value={serviceId}
+                onChange={(event) => setServiceId(event.target.value)}
+              >
+                <option value="">Selecione um serviço</option>
+                {services.map((service) => (
+                  <option key={service.id} value={service.id}>
+                    {service.name} - {service.duration} min
+                  </option>
+                ))}
+              </select>
+            </div>
 
-              <label>
-                <span style={{ display: "block", marginBottom: 8 }}>
-                  Profissional
-                </span>
-                <select
-                  className="input"
-                  value={professionalId}
-                  onChange={(event) => setProfessionalId(event.target.value)}
-                >
-                  <option value="">Selecione um profissional</option>
-                  {professionals.map((professional) => (
-                    <option key={professional.id} value={professional.id}>
-                      {professional.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
+            <div>
+              <label>Profissional</label>
+              <select
+                value={professionalId}
+                onChange={(event) => setProfessionalId(event.target.value)}
+              >
+                <option value="">Selecione um profissional</option>
+                {professionals.map((professional) => (
+                  <option key={professional.id} value={professional.id}>
+                    {professional.name}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-              <label>
-                <span style={{ display: "block", marginBottom: 8 }}>Cliente</span>
-                <select
-                  className="input"
-                  value={clientId}
-                  onChange={(event) => setClientId(event.target.value)}
-                >
-                  <option value="">Selecione um cliente</option>
-                  {clients.map((client) => (
-                    <option key={client.id} value={client.id}>
-                      {client.name}
-                    </option>
-                  ))}
-                </select>
-              </label>
+            <div>
+              <label>Cliente</label>
+              <select
+                value={clientId}
+                onChange={(event) => setClientId(event.target.value)}
+              >
+                <option value="">Selecione um cliente</option>
+                {clients.map((client) => (
+                  <option key={client.id} value={client.id}>
+                    {client.name}
+                  </option>
+                ))}
+              </select>
+            </div>
 
-              <label>
-                <span style={{ display: "block", marginBottom: 8 }}>Data</span>
-                <input
-                  className="input"
-                  type="date"
-                  value={date}
-                  onChange={(event) => setDate(event.target.value)}
-                />
-              </label>
+            <div>
+              <label>Data</label>
+              <input
+                type="date"
+                value={date}
+                onChange={(event) => setDate(event.target.value)}
+              />
+            </div>
 
-              <div>
-                <h3>Horários disponíveis</h3>
+            <div>
+              <label>Horários disponíveis</label>
 
-                <div
-                  style={{
-                    display: "flex",
-                    gap: 10,
-                    flexWrap: "wrap",
-                  }}
-                >
-                  {availableTimes.length === 0 && (
-                    <p style={{ color: "#b8b8c8" }}>
-                      Nenhum horário disponível para essa data.
-                    </p>
-                  )}
-
-                  {availableTimes.map((time) => {
+              <div className="time-grid">
+                {availableTimes.length === 0 ? (
+                  <p className="empty-message">
+                    Nenhum horário disponível para essa data.
+                  </p>
+                ) : (
+                  availableTimes.map((time) => {
                     const active = selectedTime?.startTime === time.startTime;
 
                     return (
@@ -189,43 +195,27 @@ export default function Appointments() {
                         key={`${time.startTime}-${time.endTime}`}
                         type="button"
                         onClick={() => setSelectedTime(time)}
-                        className={active ? "button" : "button secondary"}
+                        className={
+                          active ? "time-button selected" : "time-button"
+                        }
                       >
                         {time.startTime}
                       </button>
                     );
-                  })}
-                </div>
+                  })
+                )}
               </div>
-
-              {message && (
-                <div
-                  style={{
-                    padding: 12,
-                    borderRadius: 12,
-                    background: "rgba(136, 90, 254, 0.14)",
-                    color: "#d8ccff",
-                  }}
-                >
-                  {message}
-                </div>
-              )}
-
-              <button
-                className="button"
-                type="button"
-                onClick={createAppointment}
-                disabled={loading}
-              >
-                {loading ? "Criando..." : "Confirmar agendamento"}
-              </button>
             </div>
+
+            <button type="button" onClick={createAppointment} disabled={loading}>
+              {loading ? "Criando..." : "Confirmar agendamento"}
+            </button>
           </section>
 
-          <section className="card">
+          <section className="table-card appointments-table-card">
             <h2>Agendamentos</h2>
 
-            <table className="table">
+            <table>
               <thead>
                 <tr>
                   <th>Data</th>
@@ -236,18 +226,26 @@ export default function Appointments() {
               </thead>
 
               <tbody>
-                {appointments.map((appointment) => (
-                  <tr key={appointment.id}>
-                    <td>{appointment.date}</td>
-                    <td>
-                      {appointment.startTime} - {appointment.endTime}
-                    </td>
-                    <td>{appointment.client?.name}</td>
-                    <td>
-                      <span className="badge">{appointment.status}</span>
-                    </td>
+                {appointments.length === 0 ? (
+                  <tr>
+                    <td colSpan="4">Nenhum agendamento cadastrado.</td>
                   </tr>
-                ))}
+                ) : (
+                  appointments.map((appointment) => (
+                    <tr key={appointment.id}>
+                      <td>{appointment.date}</td>
+                      <td>
+                        {appointment.startTime} - {appointment.endTime}
+                      </td>
+                      <td>{appointment.client?.name || "—"}</td>
+                      <td>
+                        <span className="status-badge active">
+                          {appointment.status}
+                        </span>
+                      </td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </section>

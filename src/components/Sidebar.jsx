@@ -10,6 +10,8 @@ import {
   Building2,
   LogOut,
   ShieldCheck,
+  Menu,
+  X,
 } from "lucide-react";
 
 import api from "../api/api";
@@ -18,6 +20,7 @@ export default function Sidebar() {
   const navigate = useNavigate();
   const [company, setCompany] = useState(null);
   const [user, setUser] = useState(null);
+  const [mobileOpen, setMobileOpen] = useState(false);
 
   const menuItems = [
     {
@@ -84,6 +87,11 @@ export default function Sidebar() {
       );
     } catch (error) {
       const storedCompany = localStorage.getItem("@lopex:company");
+      const storedUser = localStorage.getItem("@lopex:user");
+
+      if (storedUser) {
+        setUser(JSON.parse(storedUser));
+      }
 
       if (storedCompany) {
         const companyData = JSON.parse(storedCompany);
@@ -106,6 +114,10 @@ export default function Sidebar() {
     navigate("/");
   }
 
+  function closeMobileMenu() {
+    setMobileOpen(false);
+  }
+
   useEffect(() => {
     loadCompany();
   }, []);
@@ -119,45 +131,79 @@ export default function Sidebar() {
   });
 
   return (
-    <aside className="sidebar">
-      <div className="sidebar-brand">
-        <div className="sidebar-logo">
-          {company?.logoUrl ? (
-            <img src={company.logoUrl} alt={company.name} />
-          ) : (
-            <span>LX</span>
-          )}
-        </div>
-
-        <div>
-          <strong>{company?.name || "Lopex Agenda"}</strong>
-          <small>{company?.slug || "Painel de agendamentos"}</small>
-        </div>
-      </div>
-
-      <nav className="sidebar-menu">
-        {visibleMenuItems.map((item) => {
-          const Icon = item.icon;
-
-          return (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              className={({ isActive }) =>
-                isActive ? "sidebar-link active" : "sidebar-link"
-              }
-            >
-              <Icon size={20} />
-              <span>{item.label}</span>
-            </NavLink>
-          );
-        })}
-      </nav>
-
-      <button type="button" className="logout-button" onClick={handleLogout}>
-        <LogOut size={20} />
-        <span>Sair</span>
+    <>
+      <button
+        type="button"
+        className="mobile-menu-toggle"
+        onClick={() => setMobileOpen(true)}
+        aria-label="Abrir menu"
+      >
+        <Menu size={22} />
       </button>
-    </aside>
+
+      {mobileOpen && (
+        <button
+          type="button"
+          className="mobile-menu-backdrop"
+          onClick={closeMobileMenu}
+          aria-label="Fechar menu"
+        />
+      )}
+
+      <aside className={mobileOpen ? "sidebar mobile-open" : "sidebar"}>
+        <div className="sidebar-mobile-header">
+          <span>Menu</span>
+
+          <button
+            type="button"
+            className="sidebar-close-button"
+            onClick={closeMobileMenu}
+            aria-label="Fechar menu"
+          >
+            <X size={20} />
+          </button>
+        </div>
+
+        <div className="sidebar-brand">
+          <div className="sidebar-logo">
+            {company?.logoUrl ? (
+              <img src={company.logoUrl} alt={company.name} />
+            ) : (
+              <span>LX</span>
+            )}
+          </div>
+
+          <div>
+            <strong>{company?.name || "Lopex Agenda"}</strong>
+            <small>{company?.slug || "Painel de agendamentos"}</small>
+          </div>
+        </div>
+
+        <nav className="sidebar-menu">
+          {visibleMenuItems.map((item) => {
+            const Icon = item.icon;
+
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                onClick={closeMobileMenu}
+                className={({ isActive }) =>
+                  isActive ? "sidebar-link active" : "sidebar-link"
+                }
+              >
+                <Icon size={20} />
+                <span>{item.label}</span>
+              </NavLink>
+            );
+          })}
+        </nav>
+
+        <button type="button" className="logout-button" onClick={handleLogout}>
+          <LogOut size={20} />
+          <span>Sair</span>
+        </button>
+      </aside>
+    </>
   );
 }

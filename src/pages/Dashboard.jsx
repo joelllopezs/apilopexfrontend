@@ -10,65 +10,84 @@ export default function Dashboard() {
     appointments: 0,
   });
 
+  const [company, setCompany] = useState(null);
+  const [message, setMessage] = useState("");
+
   const user = JSON.parse(localStorage.getItem("@lopex:user") || "{}");
 
-  useEffect(() => {
-    async function load() {
-      const [services, professionals, clients, appointments] =
-        await Promise.all([
-          api.get("/services"),
-          api.get("/professionals"),
-          api.get("/clients"),
-          api.get("/appointments"),
-        ]);
+  async function loadDashboard() {
+    try {
+      setMessage("");
+
+      const [
+        servicesResponse,
+        professionalsResponse,
+        clientsResponse,
+        appointmentsResponse,
+        companyResponse,
+      ] = await Promise.all([
+        api.get("/services"),
+        api.get("/professionals"),
+        api.get("/clients"),
+        api.get("/appointments"),
+        api.get("/companies/me").catch(() => null),
+      ]);
 
       setSummary({
-        services: services.data.length,
-        professionals: professionals.data.length,
-        clients: clients.data.length,
-        appointments: appointments.data.length,
+        services: servicesResponse.data.length,
+        professionals: professionalsResponse.data.length,
+        clients: clientsResponse.data.length,
+        appointments: appointmentsResponse.data.length,
       });
-    }
 
-    load();
+      if (companyResponse?.data) {
+        setCompany(companyResponse.data);
+      }
+    } catch (error) {
+      console.error(error);
+      setMessage(
+        error.response?.data?.message || "Erro ao carregar dados do dashboard."
+      );
+    }
+  }
+
+  useEffect(() => {
+    loadDashboard();
   }, []);
 
   return (
-    <div className="layout">
+    <div className="app-layout">
       <Sidebar />
 
-      <main className="content">
+      <main className="main-content">
         <h1>Dashboard</h1>
-        <p style={{ color: "#b8b8c8" }}>
-          Bem-vindo, {user.name}. Empresa: {user.company?.name || "—"}
+
+        <p>
+          Bem-vindo, {user.name || "usuário"}. Empresa:{" "}
+          {company?.name || user.company?.name || "—"}
         </p>
 
-        <div
-          style={{
-            display: "grid",
-            gridTemplateColumns: "repeat(4, 1fr)",
-            gap: 18,
-            marginTop: 28,
-          }}
-        >
-          <div className="card">
-            <span className="badge">Serviços</span>
-            <h2>{summary.services}</h2>
+        {message && <div className="alert-message">{message}</div>}
+
+        <div className="dashboard-cards">
+          <div className="dashboard-card">
+            <span>Serviços</span>
+            <strong>{summary.services}</strong>
           </div>
 
-          <div className="card">
-            <span className="badge">Profissionais</span>
-            <h2>{summary.professionals}</h2>
+          <div className="dashboard-card">
+            <span>Profissionais</span>
+            <strong>{summary.professionals}</strong>
           </div>
 
-          <div className="card">
-            <span className="badge">Clientes</span>
-            <h2>{summary.clients}</h2>
+          <div className="dashboard-card">
+            <span>Clientes</span>
+            <strong>{summary.clients}</strong>
           </div>
 
-          <div className="card">
-            <span className="badge">Agendamentos</span>
-            <h2>{summary.appointments}</h2>
+          <div className="dashboard-card">
+            <span>Agendamentos</span>
+            <strong>{summary.appointments}</strong>
           </div>
         </div>
       </main>
