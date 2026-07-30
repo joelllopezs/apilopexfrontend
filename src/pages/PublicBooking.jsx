@@ -32,6 +32,21 @@ export default function PublicBooking() {
     return `${day}/${month}/${year}`;
   }
 
+  async function copyCancelLink() {
+    if (!confirmedAppointment?.cancelUrl) {
+      setMessage("Link de cancelamento não disponível.");
+      return;
+    }
+
+    try {
+      await navigator.clipboard.writeText(confirmedAppointment.cancelUrl);
+      setMessage("Link de cancelamento copiado com sucesso.");
+    } catch (error) {
+      console.error(error);
+      setMessage(confirmedAppointment.cancelUrl);
+    }
+  }
+
   async function loadCompany() {
     try {
       setMessage("");
@@ -143,16 +158,18 @@ export default function PublicBooking() {
         date,
         startTime: selectedTime.startTime,
         endTime: selectedTime.endTime,
-
         clientName: trimmedClientName,
         clientPhone: trimmedClientPhone,
         clientEmail: trimmedClientEmail || null,
-
         notes: notes.trim() || null,
       });
 
+      const apiAppointment = response.data.appointment || response.data;
+
       setConfirmedAppointment({
-        ...response.data,
+        ...apiAppointment,
+        cancelUrl: response.data.cancelUrl || "",
+        cancelPath: response.data.cancelPath || "",
         clientName: trimmedClientName,
         clientPhone: trimmedClientPhone,
         clientEmail: trimmedClientEmail,
@@ -207,10 +224,14 @@ export default function PublicBooking() {
             </div>
 
             <div>
-              <h1>Agendamento confirmado!</h1>
-              <p>Seu horário foi registrado com sucesso.</p>
+              <h1>Agendamento solicitado!</h1>
+              <p>
+                Seu horário foi registrado. Aguarde a confirmação da empresa.
+              </p>
             </div>
           </div>
+
+          {message && <div className="public-alert">{message}</div>}
 
           <div className="booking-success-box">
             <h2>{company?.name}</h2>
@@ -248,6 +269,37 @@ export default function PublicBooking() {
               <strong>{confirmedAppointment.clientPhone}</strong>
             </div>
           </div>
+
+          {confirmedAppointment.cancelUrl && (
+            <div className="public-cancel-box">
+              <h3>Precisa cancelar?</h3>
+              <p>
+                Guarde este link. Por ele você poderá cancelar o agendamento,
+                respeitando a regra de antecedência da empresa.
+              </p>
+
+              <div className="public-cancel-link">
+                {confirmedAppointment.cancelUrl}
+              </div>
+
+              <div className="public-cancel-actions">
+                <button
+                  type="button"
+                  className="public-secondary-button"
+                  onClick={copyCancelLink}
+                >
+                  Copiar link de cancelamento
+                </button>
+
+                <a
+                  className="public-danger-link"
+                  href={confirmedAppointment.cancelUrl}
+                >
+                  Abrir cancelamento
+                </a>
+              </div>
+            </div>
+          )}
 
           <button
             type="button"

@@ -2109,3 +2109,87 @@ button.primary-button:disabled {
     align-items: flex-start;
   }
 }
+
+.public-cancel-box {
+  width: 100%;
+  margin-top: 18px;
+  padding: 16px;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.public-cancel-box h3 {
+  margin: 0 0 8px;
+  color: var(--text);
+}
+
+.public-cancel-box p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.public-cancel-link {
+  margin-top: 12px;
+  padding: 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(0, 0, 0, 0.18);
+  color: var(--text);
+  font-size: 13px;
+  overflow-wrap: anywhere;
+}
+
+.public-cancel-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 14px;
+}
+
+.public-secondary-button,
+.public-secondary-link,
+.public-danger-link,
+.public-danger-button {
+  min-height: 44px;
+  border-radius: 12px;
+  padding: 0 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 900;
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.public-secondary-button,
+.public-secondary-link {
+  border: 1px solid color-mix(in srgb, var(--primary-color) 35%, transparent);
+  background: rgba(255, 255, 255, 0.04);
+  color: #ffffff;
+}
+
+.public-danger-link,
+.public-danger-button {
+  border: 1px solid rgba(239, 68, 68, 0.45);
+  background: rgba(239, 68, 68, 0.14);
+  color: #fecaca;
+}
+
+.public-danger-button {
+  width: 100%;
+  margin-top: 18px;
+}
+
+.public-danger-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 620px) {
+  .public-cancel-actions a,
+  .public-cancel-actions button {
+    width: 100%;
+  }
+}
