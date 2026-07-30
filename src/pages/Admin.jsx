@@ -29,6 +29,17 @@ export default function Admin() {
     return planMap[plan] || "Start";
   }
 
+  function translateSubscriptionStatus(status) {
+    const statusMap = {
+      trial: "Teste gratuito",
+      active: "Ativa",
+      overdue: "Atrasada",
+      cancelled: "Cancelada",
+    };
+
+    return statusMap[status] || "Teste gratuito";
+  }
+
   function getStatusClass(status) {
     return status === "active" ? "status-badge active" : "status-badge blocked";
   }
@@ -43,6 +54,17 @@ export default function Admin() {
     return planClassMap[plan] || "plan-badge start";
   }
 
+  function getSubscriptionClass(status) {
+    const classMap = {
+      trial: "subscription-badge trial",
+      active: "subscription-badge active",
+      overdue: "subscription-badge overdue",
+      cancelled: "subscription-badge cancelled",
+    };
+
+    return classMap[status] || "subscription-badge trial";
+  }
+
   function formatDate(value) {
     if (!value) return "—";
 
@@ -51,6 +73,16 @@ export default function Admin() {
     if (Number.isNaN(date.getTime())) return "—";
 
     return date.toLocaleDateString("pt-BR");
+  }
+
+  function formatInputDate(value) {
+    if (!value) return "";
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) return "";
+
+    return date.toISOString().slice(0, 10);
   }
 
   async function loadAdminData() {
@@ -133,6 +165,52 @@ export default function Admin() {
     }
   }
 
+  async function updateCompanySubscription(company, field, value) {
+    try {
+      setUpdatingId(company.id);
+      setMessage("");
+
+      const payload = {
+        subscriptionStatus:
+          field === "subscriptionStatus"
+            ? value
+            : company.subscriptionStatus || "trial",
+        subscriptionStart:
+          field === "subscriptionStart"
+            ? value || null
+            : formatInputDate(company.subscriptionStart) || null,
+        subscriptionEnd:
+          field === "subscriptionEnd"
+            ? value || null
+            : formatInputDate(company.subscriptionEnd) || null,
+        trialEndsAt:
+          field === "trialEndsAt"
+            ? value || null
+            : formatInputDate(company.trialEndsAt) || null,
+      };
+
+      const response = await api.patch(
+        `/admin/companies/${company.id}/subscription`,
+        payload
+      );
+
+      setMessage(
+        response.data?.message || "Assinatura atualizada com sucesso."
+      );
+
+      await loadAdminData();
+    } catch (error) {
+      console.error(error);
+
+      setMessage(
+        error.response?.data?.message ||
+          "Erro ao atualizar assinatura da empresa."
+      );
+    } finally {
+      setUpdatingId("");
+    }
+  }
+
   async function deleteCompany(company) {
     const firstConfirm = window.confirm(
       `Deseja realmente excluir permanentemente a empresa "${company.name}"? Essa ação apagará usuários, serviços, profissionais, clientes, horários e agendamentos dessa empresa.`
@@ -145,7 +223,9 @@ export default function Admin() {
     );
 
     if (confirmText !== "EXCLUIR") {
-      setMessage('Exclusão cancelada. Para excluir, é necessário digitar "EXCLUIR".');
+      setMessage(
+        'Exclusão cancelada. Para excluir, é necessário digitar "EXCLUIR".'
+      );
       return;
     }
 
@@ -160,7 +240,8 @@ export default function Admin() {
       });
 
       setMessage(
-        response.data?.message || "Empresa excluída permanentemente com sucesso."
+        response.data?.message ||
+          "Empresa excluída permanentemente com sucesso."
       );
 
       await loadAdminData();
@@ -260,6 +341,32 @@ export default function Admin() {
 
             <div className="dashboard-cards secondary-cards">
               <div className="dashboard-card">
+                <span>Trial</span>
+                <strong>{summary.trialCompanies ?? 0}</strong>
+                <small>Teste gratuito</small>
+              </div>
+
+              <div className="dashboard-card">
+                <span>Assinaturas ativas</span>
+                <strong>{summary.activeSubscriptions ?? 0}</strong>
+                <small>Pagantes/ativas</small>
+              </div>
+
+              <div className="dashboard-card">
+                <span>Atrasadas</span>
+                <strong>{summary.overdueSubscriptions ?? 0}</strong>
+                <small>Pagamento pendente</small>
+              </div>
+
+              <div className="dashboard-card">
+                <span>Canceladas</span>
+                <strong>{summary.cancelledSubscriptions ?? 0}</strong>
+                <small>Assinaturas encerradas</small>
+              </div>
+            </div>
+
+            <div className="dashboard-cards secondary-cards">
+              <div className="dashboard-card">
                 <span>Serviços</span>
                 <strong>{summary.services}</strong>
               </div>
@@ -287,8 +394,8 @@ export default function Admin() {
             <div>
               <h2>Empresas cadastradas</h2>
               <p>
-                Ative, bloqueie, altere planos ou exclua empresas cadastradas
-                na plataforma.
+                Ative, bloqueie, altere planos, controle assinaturas ou exclua
+                empresas cadastradas na plataforma.
               </p>
             </div>
           </div>
@@ -302,6 +409,10 @@ export default function Admin() {
                   <th>E-mail</th>
                   <th>Status</th>
                   <th>Plano</th>
+                  <th>Assinatura</th>
+                  <th>Trial até</th>
+                  <th>Início</th>
+                  <th>Vencimento</th>
                   <th>Criada em</th>
                   <th>Usuários</th>
                   <th>Serviços</th>
@@ -315,7 +426,7 @@ export default function Admin() {
               <tbody>
                 {companies.length === 0 ? (
                   <tr>
-                    <td colSpan="12">Nenhuma empresa cadastrada.</td>
+                    <td colSpan="16">Nenhuma empresa cadastrada.</td>
                   </tr>
                 ) : (
                   companies.map((company) => {
@@ -327,6 +438,8 @@ export default function Admin() {
                     const isActive = company.status === "active";
                     const isUpdating = updatingId === company.id;
                     const companyPlan = company.plan || "start";
+                    const subscriptionStatus =
+                      company.subscriptionStatus || "trial";
 
                     return (
                       <tr key={company.id}>
@@ -357,7 +470,10 @@ export default function Admin() {
                               value={companyPlan}
                               disabled={isUpdating}
                               onChange={(event) =>
-                                updateCompanyPlan(company.id, event.target.value)
+                                updateCompanyPlan(
+                                  company.id,
+                                  event.target.value
+                                )
                               }
                             >
                               <option value="start">Start</option>
@@ -365,6 +481,90 @@ export default function Admin() {
                               <option value="premium">Premium</option>
                             </select>
                           </div>
+                        </td>
+
+                        <td>
+                          <div className="admin-subscription-cell">
+                            <span
+                              className={getSubscriptionClass(
+                                subscriptionStatus
+                              )}
+                            >
+                              {company.subscriptionLabel ||
+                                translateSubscriptionStatus(
+                                  subscriptionStatus
+                                )}
+                            </span>
+
+                            <select
+                              className="admin-plan-select"
+                              value={subscriptionStatus}
+                              disabled={isUpdating}
+                              onChange={(event) =>
+                                updateCompanySubscription(
+                                  company,
+                                  "subscriptionStatus",
+                                  event.target.value
+                                )
+                              }
+                            >
+                              <option value="trial">Trial</option>
+                              <option value="active">Ativa</option>
+                              <option value="overdue">Atrasada</option>
+                              <option value="cancelled">Cancelada</option>
+                            </select>
+                          </div>
+                        </td>
+
+                        <td>
+                          <input
+                            type="date"
+                            className="admin-date-input"
+                            value={formatInputDate(company.trialEndsAt)}
+                            disabled={isUpdating}
+                            onChange={(event) =>
+                              updateCompanySubscription(
+                                company,
+                                "trialEndsAt",
+                                event.target.value
+                              )
+                            }
+                          />
+                          <small>{formatDate(company.trialEndsAt)}</small>
+                        </td>
+
+                        <td>
+                          <input
+                            type="date"
+                            className="admin-date-input"
+                            value={formatInputDate(company.subscriptionStart)}
+                            disabled={isUpdating}
+                            onChange={(event) =>
+                              updateCompanySubscription(
+                                company,
+                                "subscriptionStart",
+                                event.target.value
+                              )
+                            }
+                          />
+                          <small>{formatDate(company.subscriptionStart)}</small>
+                        </td>
+
+                        <td>
+                          <input
+                            type="date"
+                            className="admin-date-input"
+                            value={formatInputDate(company.subscriptionEnd)}
+                            disabled={isUpdating}
+                            onChange={(event) =>
+                              updateCompanySubscription(
+                                company,
+                                "subscriptionEnd",
+                                event.target.value
+                              )
+                            }
+                          />
+                          <small>{formatDate(company.subscriptionEnd)}</small>
                         </td>
 
                         <td>{formatDate(company.createdAt)}</td>
@@ -377,8 +577,7 @@ export default function Admin() {
                           <strong>{company._count?.professionals || 0}</strong>
                           <br />
                           <small>
-                            Limite:{" "}
-                            {company.planLimits?.professionals ?? "—"}
+                            Limite: {company.planLimits?.professionals ?? "—"}
                           </small>
                         </td>
 

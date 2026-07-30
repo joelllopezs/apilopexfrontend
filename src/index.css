@@ -2787,3 +2787,98 @@ button.primary-button:disabled {
     font-size: 1.35rem;
   }
 }
+
+/* =========================
+   ADMIN MASTER - PLANOS E ASSINATURAS
+========================= */
+
+.admin-table-scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.admin-plan-cell,
+.admin-subscription-cell {
+  display: grid;
+  gap: 8px;
+  min-width: 130px;
+}
+
+.plan-badge,
+.subscription-badge {
+  width: fit-content;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+  border: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.plan-badge.start {
+  color: #bfdbfe;
+  background: rgba(59, 130, 246, 0.12);
+  border-color: rgba(59, 130, 246, 0.34);
+}
+
+.plan-badge.pro {
+  color: #ddd6fe;
+  background: rgba(139, 92, 246, 0.14);
+  border-color: rgba(139, 92, 246, 0.36);
+}
+
+.plan-badge.premium {
+  color: #fde68a;
+  background: rgba(245, 158, 11, 0.14);
+  border-color: rgba(245, 158, 11, 0.38);
+}
+
+.subscription-badge.trial {
+  color: #bae6fd;
+  background: rgba(14, 165, 233, 0.12);
+  border-color: rgba(14, 165, 233, 0.34);
+}
+
+.subscription-badge.active {
+  color: #bbf7d0;
+  background: rgba(34, 197, 94, 0.12);
+  border-color: rgba(34, 197, 94, 0.34);
+}
+
+.subscription-badge.overdue {
+  color: #fed7aa;
+  background: rgba(249, 115, 22, 0.12);
+  border-color: rgba(249, 115, 22, 0.34);
+}
+
+.subscription-badge.cancelled {
+  color: #fecaca;
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.34);
+}
+
+.admin-plan-select,
+.admin-date-input {
+  min-width: 120px;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  outline: none;
+}
+
+.admin-date-input {
+  min-width: 140px;
+}
+
+.admin-plan-select:disabled,
+.admin-date-input:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+td small {
+  color: var(--muted);
+}
