@@ -2882,3 +2882,174 @@ button.primary-button:disabled {
 td small {
   color: var(--muted);
 }
+
+/* =========================
+   DASHBOARD - PLANO E ASSINATURA
+========================= */
+
+.company-subscription-alert {
+  display: grid;
+  gap: 4px;
+  margin-bottom: 18px;
+  padding: 14px 16px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+}
+
+.company-subscription-alert strong {
+  color: var(--text);
+}
+
+.company-subscription-alert span {
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.company-subscription-alert.success {
+  background: rgba(34, 197, 94, 0.1);
+  border-color: rgba(34, 197, 94, 0.28);
+}
+
+.company-subscription-alert.info {
+  background: rgba(14, 165, 233, 0.1);
+  border-color: rgba(14, 165, 233, 0.28);
+}
+
+.company-subscription-alert.warning {
+  background: rgba(249, 115, 22, 0.1);
+  border-color: rgba(249, 115, 22, 0.3);
+}
+
+.company-subscription-alert.danger {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.company-plan-panel {
+  margin-bottom: 22px;
+  padding: 22px;
+  border-radius: 22px;
+  border: 1px solid color-mix(in srgb, var(--primary-color) 35%, var(--border));
+  background:
+    radial-gradient(
+      circle at top right,
+      color-mix(in srgb, var(--primary-color) 18%, transparent),
+      transparent 34%
+    ),
+    var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.company-plan-main {
+  display: flex;
+  justify-content: space-between;
+  gap: 18px;
+  align-items: flex-start;
+  margin-bottom: 18px;
+}
+
+.company-plan-kicker {
+  display: block;
+  margin-bottom: 6px;
+  color: var(--muted);
+  font-size: 13px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.company-plan-main h2 {
+  margin: 0 0 6px;
+  color: var(--text);
+  font-size: 30px;
+}
+
+.company-plan-main p {
+  margin: 0;
+  color: var(--muted);
+}
+
+.company-plan-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.company-plan-info {
+  padding: 15px;
+  border-radius: 16px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.company-plan-info span {
+  display: block;
+  color: var(--muted);
+  font-size: 13px;
+  margin-bottom: 7px;
+}
+
+.company-plan-info strong {
+  display: block;
+  color: var(--text);
+  font-size: 20px;
+  margin-bottom: 4px;
+}
+
+.company-plan-info small {
+  color: var(--muted);
+}
+
+.subscription-badge {
+  width: fit-content;
+  padding: 7px 11px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+  border: 1px solid var(--border);
+  white-space: nowrap;
+}
+
+.subscription-badge.trial {
+  color: #bae6fd;
+  background: rgba(14, 165, 233, 0.12);
+  border-color: rgba(14, 165, 233, 0.34);
+}
+
+.subscription-badge.active {
+  color: #bbf7d0;
+  background: rgba(34, 197, 94, 0.12);
+  border-color: rgba(34, 197, 94, 0.34);
+}
+
+.subscription-badge.overdue {
+  color: #fed7aa;
+  background: rgba(249, 115, 22, 0.12);
+  border-color: rgba(249, 115, 22, 0.34);
+}
+
+.subscription-badge.cancelled {
+  color: #fecaca;
+  background: rgba(239, 68, 68, 0.12);
+  border-color: rgba(239, 68, 68, 0.34);
+}
+
+@media (max-width: 920px) {
+  .company-plan-main {
+    flex-direction: column;
+  }
+
+  .company-plan-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .company-plan-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .company-plan-main h2 {
+    font-size: 24px;
+  }
+}

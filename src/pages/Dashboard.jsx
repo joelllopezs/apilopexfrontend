@@ -35,8 +35,16 @@ export default function Dashboard() {
   function formatDate(value) {
     if (!value) return "—";
 
-    const [year, month, day] = value.split("-");
-    return `${day}/${month}/${year}`;
+    if (String(value).includes("-") && !String(value).includes("T")) {
+      const [year, month, day] = value.split("-");
+      return `${day}/${month}/${year}`;
+    }
+
+    const date = new Date(value);
+
+    if (Number.isNaN(date.getTime())) return "—";
+
+    return date.toLocaleDateString("pt-BR");
   }
 
   function translateStatus(status) {
@@ -50,6 +58,27 @@ export default function Dashboard() {
     return statusMap[status] || status;
   }
 
+  function translatePlan(plan) {
+    const planMap = {
+      start: "Start",
+      pro: "Pro",
+      premium: "Premium",
+    };
+
+    return planMap[plan] || "Start";
+  }
+
+  function translateSubscriptionStatus(status) {
+    const statusMap = {
+      trial: "Teste gratuito",
+      active: "Ativa",
+      overdue: "Atrasada",
+      cancelled: "Cancelada",
+    };
+
+    return statusMap[status] || "Teste gratuito";
+  }
+
   function getStatusClass(status) {
     const statusClassMap = {
       pending: "status-badge pending",
@@ -59,6 +88,121 @@ export default function Dashboard() {
     };
 
     return statusClassMap[status] || "status-badge";
+  }
+
+  function getSubscriptionClass(status) {
+    const classMap = {
+      trial: "subscription-badge trial",
+      active: "subscription-badge active",
+      overdue: "subscription-badge overdue",
+      cancelled: "subscription-badge cancelled",
+    };
+
+    return classMap[status] || "subscription-badge trial";
+  }
+
+  function getPlanLimit(plan) {
+    const limits = {
+      start: 2,
+      pro: 5,
+      premium: 15,
+    };
+
+    return limits[plan] || 2;
+  }
+
+  function getDaysUntil(value) {
+    if (!value) return null;
+
+    const today = new Date();
+    const target = new Date(value);
+
+    if (Number.isNaN(target.getTime())) return null;
+
+    today.setHours(0, 0, 0, 0);
+    target.setHours(0, 0, 0, 0);
+
+    const diff = target.getTime() - today.getTime();
+
+    return Math.ceil(diff / (1000 * 60 * 60 * 24));
+  }
+
+  function getSubscriptionAlert() {
+    if (!company) return null;
+
+    const status = company.subscriptionStatus || "trial";
+
+    if (status === "cancelled") {
+      return {
+        type: "danger",
+        title: "Assinatura cancelada",
+        text: "Sua assinatura está cancelada. Alguns recursos podem ser bloqueados em breve.",
+      };
+    }
+
+    if (status === "overdue") {
+      return {
+        type: "warning",
+        title: "Pagamento atrasado",
+        text: "Sua assinatura está marcada como atrasada. Regularize para evitar bloqueios.",
+      };
+    }
+
+    if (status === "trial") {
+      const days = getDaysUntil(company.trialEndsAt);
+
+      if (days === null) {
+        return {
+          type: "info",
+          title: "Teste gratuito ativo",
+          text: "Sua empresa está no período de teste gratuito.",
+        };
+      }
+
+      if (days < 0) {
+        return {
+          type: "warning",
+          title: "Teste gratuito vencido",
+          text: "Seu período de teste terminou. Aguarde a atualização da assinatura.",
+        };
+      }
+
+      if (days <= 3) {
+        return {
+          type: "warning",
+          title: "Teste perto de vencer",
+          text: `Seu teste gratuito termina em ${days} dia${
+            days === 1 ? "" : "s"
+          }.`,
+        };
+      }
+
+      return {
+        type: "info",
+        title: "Teste gratuito ativo",
+        text: `Seu teste gratuito termina em ${days} dias.`,
+      };
+    }
+
+    if (status === "active") {
+      const days = getDaysUntil(company.subscriptionEnd);
+
+      if (days !== null && days <= 5 && days >= 0) {
+        return {
+          type: "info",
+          title: "Assinatura perto do vencimento",
+          text: `Sua assinatura vence em ${days} dia${days === 1 ? "" : "s"}.`,
+        };
+      }
+
+      return {
+        type: "success",
+        title: "Assinatura ativa",
+        text: "Sua assinatura está ativa e liberada para uso.",
+      };
+    }
+
+    return null;
   }
 
   function getFutureAppointments(appointments) {
@@ -164,6 +308,13 @@ export default function Dashboard() {
     loadDashboard();
   }, []);
 
+  const plan = company?.plan || user.company?.plan || "start";
+  const subscriptionStatus =
+    company?.subscriptionStatus || user.company?.subscriptionStatus || "trial";
+  const professionalLimit = getPlanLimit(plan);
+  const usedProfessionals = summary.professionals;
+  const subscriptionAlert = getSubscriptionAlert();
+
   return (
     <div className="app-layout">
       <Sidebar />
@@ -190,6 +341,58 @@ export default function Dashboard() {
         </div>
 
         {message && <div className="alert-message">{message}</div>}
+
+        {subscriptionAlert && (
+          <div className={`company-subscription-alert ${subscriptionAlert.type}`}>
+            <strong>{subscriptionAlert.title}</strong>
+            <span>{subscriptionAlert.text}</span>
+          </div>
+        )}
+
+        <section className="company-plan-panel">
+          <div className="company-plan-main">
+            <div>
+              <span className="company-plan-kicker">Plano atual</span>
+              <h2>{translatePlan(plan)}</h2>
+              <p>
+                Sua empresa está usando o plano {translatePlan(plan)} na LopeX
+                Agenda.
+              </p>
+            </div>
+
+            <span className={getSubscriptionClass(subscriptionStatus)}>
+              {translateSubscriptionStatus(subscriptionStatus)}
+            </span>
+          </div>
+
+          <div className="company-plan-grid">
+            <div className="company-plan-info">
+              <span>Profissionais ativos</span>
+              <strong>
+                {usedProfessionals}/{professionalLimit}
+              </strong>
+              <small>limite do plano</small>
+            </div>
+
+            <div className="company-plan-info">
+              <span>Trial até</span>
+              <strong>{formatDate(company?.trialEndsAt)}</strong>
+              <small>período gratuito</small>
+            </div>
+
+            <div className="company-plan-info">
+              <span>Início da assinatura</span>
+              <strong>{formatDate(company?.subscriptionStart)}</strong>
+              <small>data registrada</small>
+            </div>
+
+            <div className="company-plan-info">
+              <span>Vencimento</span>
+              <strong>{formatDate(company?.subscriptionEnd)}</strong>
+              <small>próximo controle</small>
+            </div>
+          </div>
+        </section>
 
         <div className="dashboard-cards">
           <div className="dashboard-card">
