@@ -2,12 +2,56 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import api from "../api/api";
 
+const PLANS = [
+  {
+    id: "start",
+    name: "Start",
+    price: "R$ 49,90/mês",
+    description: "Ideal para começar com agenda online.",
+    professionals: "Até 2 profissionais",
+    features: [
+      "Serviços ilimitados",
+      "Clientes ilimitados",
+      "Página pública de agendamento",
+      "Cancelamento pelo cliente",
+    ],
+  },
+  {
+    id: "pro",
+    name: "Pro",
+    price: "R$ 79,90/mês",
+    description: "Para equipes pequenas em crescimento.",
+    professionals: "Até 5 profissionais",
+    features: [
+      "Tudo do Start",
+      "Mais profissionais ativos",
+      "Melhor para equipes",
+      "Preparado para automações futuras",
+    ],
+    featured: true,
+  },
+  {
+    id: "premium",
+    name: "Premium",
+    price: "R$ 149,90/mês",
+    description: "Para empresas com operação maior.",
+    professionals: "Até 15 profissionais",
+    features: [
+      "Tudo do Pro",
+      "Maior limite de profissionais",
+      "Preparado para WhatsApp",
+      "Preparado para pagamentos",
+    ],
+  },
+];
+
 export default function RegisterCompany() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [success, setSuccess] = useState(false);
 
   const initialForm = {
+    plan: "start",
     userName: "",
     userEmail: "",
     password: "",
@@ -72,6 +116,16 @@ export default function RegisterCompany() {
     return /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug);
   }
 
+  function isValidPlan(plan) {
+    return ["start", "pro", "premium"].includes(plan);
+  }
+
+  function getSelectedPlanName() {
+    const selectedPlan = PLANS.find((plan) => plan.id === form.plan);
+
+    return selectedPlan?.name || "Start";
+  }
+
   function validateForm() {
     const userName = form.userName.trim();
     const userEmail = form.userEmail.trim();
@@ -81,6 +135,10 @@ export default function RegisterCompany() {
     const companySlug = generateSlug(form.companySlug);
     const companyEmail = form.companyEmail.trim();
     const companyPhone = form.companyPhone.trim();
+
+    if (!isValidPlan(form.plan)) {
+      return "Selecione um plano válido.";
+    }
 
     if (!userName) {
       return "Informe o nome do responsável.";
@@ -175,6 +233,7 @@ export default function RegisterCompany() {
       }
 
       const payload = {
+        plan: form.plan,
         userName: form.userName.trim(),
         userEmail: form.userEmail.trim().toLowerCase(),
         password: form.password,
@@ -194,11 +253,13 @@ export default function RegisterCompany() {
       localStorage.removeItem("@lopex:user");
       localStorage.removeItem("@lopex:company");
 
+      const selectedPlanName = getSelectedPlanName();
+
       setForm(initialForm);
       setSuccess(true);
 
       setMessage(
-        "Cadastro realizado com sucesso. Sua empresa está aguardando liberação do Admin Master. Após a liberação, você poderá entrar no painel."
+        `Cadastro realizado com sucesso no plano ${selectedPlanName}. Sua empresa está aguardando liberação do Admin Master. Após a liberação, você poderá entrar no painel.`
       );
     } catch (error) {
       console.error(error);
@@ -216,8 +277,8 @@ export default function RegisterCompany() {
   }
 
   return (
-    <div className="login-page">
-      <div className="login-card register-card">
+    <div className="login-page register-company-page">
+      <div className="login-card register-card register-company-card">
         <div className="login-brand">
           <div className="brand-icon">LX</div>
 
@@ -228,7 +289,9 @@ export default function RegisterCompany() {
         </div>
 
         {message && (
-          <div className={success ? "alert-message success-message" : "alert-message"}>
+          <div
+            className={success ? "alert-message success-message" : "alert-message"}
+          >
             {message}
           </div>
         )}
@@ -239,8 +302,8 @@ export default function RegisterCompany() {
 
             <p className="field-help">
               Sua empresa foi cadastrada, mas ainda precisa ser liberada pelo
-              Admin Master. Depois da liberação, use o e-mail e senha cadastrados
-              para acessar o painel.
+              Admin Master. Depois da liberação, use o e-mail e senha
+              cadastrados para acessar o painel.
             </p>
 
             <Link to="/" className="public-submit-button login-link-button">
@@ -249,6 +312,66 @@ export default function RegisterCompany() {
           </div>
         ) : (
           <form onSubmit={handleSubmit} className="login-form">
+            <div className="form-section-title">Escolha seu plano</div>
+
+            <div className="register-plan-grid">
+              {PLANS.map((plan) => {
+                const selected = form.plan === plan.id;
+
+                return (
+                  <button
+                    key={plan.id}
+                    type="button"
+                    className={
+                      selected
+                        ? "register-plan-card selected"
+                        : plan.featured
+                        ? "register-plan-card featured"
+                        : "register-plan-card"
+                    }
+                    onClick={() =>
+                      setForm({
+                        ...form,
+                        plan: plan.id,
+                      })
+                    }
+                  >
+                    {plan.featured && (
+                      <span className="register-plan-highlight">
+                        Mais escolhido
+                      </span>
+                    )}
+
+                    <div className="register-plan-header">
+                      <strong>{plan.name}</strong>
+                      <span>{plan.price}</span>
+                    </div>
+
+                    <p>{plan.description}</p>
+
+                    <div className="register-plan-limit">
+                      {plan.professionals}
+                    </div>
+
+                    <ul>
+                      {plan.features.map((feature) => (
+                        <li key={feature}>{feature}</li>
+                      ))}
+                    </ul>
+
+                    <span className="register-plan-select-text">
+                      {selected ? "Plano selecionado" : "Selecionar plano"}
+                    </span>
+                  </button>
+                );
+              })}
+            </div>
+
+            <small className="field-help">
+              O cadastro será enviado para aprovação. O Admin Master poderá
+              confirmar ou alterar o plano antes da liberação.
+            </small>
+
             <div className="form-section-title">Dados do responsável</div>
 
             <label>Nome do responsável</label>
