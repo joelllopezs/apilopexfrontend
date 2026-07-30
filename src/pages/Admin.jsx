@@ -19,8 +19,28 @@ export default function Admin() {
     return statusMap[status] || status;
   }
 
+  function translatePlan(plan) {
+    const planMap = {
+      start: "Start",
+      pro: "Pro",
+      premium: "Premium",
+    };
+
+    return planMap[plan] || "Start";
+  }
+
   function getStatusClass(status) {
     return status === "active" ? "status-badge active" : "status-badge blocked";
+  }
+
+  function getPlanClass(plan) {
+    const planClassMap = {
+      start: "plan-badge start",
+      pro: "plan-badge pro",
+      premium: "plan-badge premium",
+    };
+
+    return planClassMap[plan] || "plan-badge start";
   }
 
   function formatDate(value) {
@@ -86,6 +106,33 @@ export default function Admin() {
     }
   }
 
+  async function updateCompanyPlan(companyId, plan) {
+    try {
+      setUpdatingId(companyId);
+      setMessage("");
+
+      const response = await api.patch(`/admin/companies/${companyId}/plan`, {
+        plan,
+      });
+
+      setMessage(
+        response.data?.message ||
+          `Plano alterado para ${translatePlan(plan)} com sucesso.`
+      );
+
+      await loadAdminData();
+    } catch (error) {
+      console.error(error);
+
+      setMessage(
+        error.response?.data?.message ||
+          "Erro ao atualizar plano da empresa."
+      );
+    } finally {
+      setUpdatingId("");
+    }
+  }
+
   async function deleteCompany(company) {
     const firstConfirm = window.confirm(
       `Deseja realmente excluir permanentemente a empresa "${company.name}"? Essa ação apagará usuários, serviços, profissionais, clientes, horários e agendamentos dessa empresa.`
@@ -120,9 +167,7 @@ export default function Admin() {
     } catch (error) {
       console.error(error);
 
-      setMessage(
-        error.response?.data?.message || "Erro ao excluir empresa."
-      );
+      setMessage(error.response?.data?.message || "Erro ao excluir empresa.");
     } finally {
       setUpdatingId("");
     }
@@ -189,6 +234,32 @@ export default function Admin() {
 
             <div className="dashboard-cards secondary-cards">
               <div className="dashboard-card">
+                <span>Start</span>
+                <strong>{summary.startCompanies ?? 0}</strong>
+                <small>Até 2 profissionais</small>
+              </div>
+
+              <div className="dashboard-card">
+                <span>Pro</span>
+                <strong>{summary.proCompanies ?? 0}</strong>
+                <small>Até 5 profissionais</small>
+              </div>
+
+              <div className="dashboard-card">
+                <span>Premium</span>
+                <strong>{summary.premiumCompanies ?? 0}</strong>
+                <small>Até 15 profissionais</small>
+              </div>
+
+              <div className="dashboard-card">
+                <span>Agendamentos</span>
+                <strong>{summary.appointments}</strong>
+                <small>Total geral</small>
+              </div>
+            </div>
+
+            <div className="dashboard-cards secondary-cards">
+              <div className="dashboard-card">
                 <span>Serviços</span>
                 <strong>{summary.services}</strong>
               </div>
@@ -204,8 +275,8 @@ export default function Admin() {
               </div>
 
               <div className="dashboard-card">
-                <span>Agendamentos</span>
-                <strong>{summary.appointments}</strong>
+                <span>Cancelados</span>
+                <strong>{summary.cancelledAppointments ?? 0}</strong>
               </div>
             </div>
           </>
@@ -216,116 +287,149 @@ export default function Admin() {
             <div>
               <h2>Empresas cadastradas</h2>
               <p>
-                Ative, bloqueie ou exclua empresas cadastradas na plataforma.
+                Ative, bloqueie, altere planos ou exclua empresas cadastradas
+                na plataforma.
               </p>
             </div>
           </div>
 
-          <table>
-            <thead>
-              <tr>
-                <th>Empresa</th>
-                <th>Responsável</th>
-                <th>E-mail</th>
-                <th>Status</th>
-                <th>Criada em</th>
-                <th>Usuários</th>
-                <th>Serviços</th>
-                <th>Profissionais</th>
-                <th>Clientes</th>
-                <th>Agendamentos</th>
-                <th>Ações</th>
-              </tr>
-            </thead>
-
-            <tbody>
-              {companies.length === 0 ? (
+          <div className="admin-table-scroll">
+            <table>
+              <thead>
                 <tr>
-                  <td colSpan="11">Nenhuma empresa cadastrada.</td>
+                  <th>Empresa</th>
+                  <th>Responsável</th>
+                  <th>E-mail</th>
+                  <th>Status</th>
+                  <th>Plano</th>
+                  <th>Criada em</th>
+                  <th>Usuários</th>
+                  <th>Serviços</th>
+                  <th>Profissionais</th>
+                  <th>Clientes</th>
+                  <th>Agendamentos</th>
+                  <th>Ações</th>
                 </tr>
-              ) : (
-                companies.map((company) => {
-                  const owner =
-                    company.users?.find(
-                      (user) => user.role === "company_admin"
-                    ) || company.users?.[0];
+              </thead>
 
-                  const isActive = company.status === "active";
-                  const isUpdating = updatingId === company.id;
+              <tbody>
+                {companies.length === 0 ? (
+                  <tr>
+                    <td colSpan="12">Nenhuma empresa cadastrada.</td>
+                  </tr>
+                ) : (
+                  companies.map((company) => {
+                    const owner =
+                      company.users?.find(
+                        (user) => user.role === "company_admin"
+                      ) || company.users?.[0];
 
-                  return (
-                    <tr key={company.id}>
-                      <td>
-                        <strong>{company.name}</strong>
-                        <br />
-                        <small>{company.slug}</small>
-                      </td>
+                    const isActive = company.status === "active";
+                    const isUpdating = updatingId === company.id;
+                    const companyPlan = company.plan || "start";
 
-                      <td>{owner?.name || "—"}</td>
+                    return (
+                      <tr key={company.id}>
+                        <td>
+                          <strong>{company.name}</strong>
+                          <br />
+                          <small>{company.slug}</small>
+                        </td>
 
-                      <td>{owner?.email || company.email || "—"}</td>
+                        <td>{owner?.name || "—"}</td>
 
-                      <td>
-                        <span className={getStatusClass(company.status)}>
-                          {translateStatus(company.status)}
-                        </span>
-                      </td>
+                        <td>{owner?.email || company.email || "—"}</td>
 
-                      <td>{formatDate(company.createdAt)}</td>
+                        <td>
+                          <span className={getStatusClass(company.status)}>
+                            {translateStatus(company.status)}
+                          </span>
+                        </td>
 
-                      <td>{company._count?.users || 0}</td>
+                        <td>
+                          <div className="admin-plan-cell">
+                            <span className={getPlanClass(companyPlan)}>
+                              {company.planLabel || translatePlan(companyPlan)}
+                            </span>
 
-                      <td>{company._count?.services || 0}</td>
-
-                      <td>{company._count?.professionals || 0}</td>
-
-                      <td>{company._count?.clients || 0}</td>
-
-                      <td>{company._count?.appointments || 0}</td>
-
-                      <td>
-                        <div className="table-actions">
-                          {!isActive && (
-                            <button
-                              type="button"
-                              onClick={() =>
-                                updateCompanyStatus(company.id, "active")
-                              }
+                            <select
+                              className="admin-plan-select"
+                              value={companyPlan}
                               disabled={isUpdating}
+                              onChange={(event) =>
+                                updateCompanyPlan(company.id, event.target.value)
+                              }
                             >
-                              Ativar
-                            </button>
-                          )}
+                              <option value="start">Start</option>
+                              <option value="pro">Pro</option>
+                              <option value="premium">Premium</option>
+                            </select>
+                          </div>
+                        </td>
 
-                          {isActive && (
+                        <td>{formatDate(company.createdAt)}</td>
+
+                        <td>{company._count?.users || 0}</td>
+
+                        <td>{company._count?.services || 0}</td>
+
+                        <td>
+                          <strong>{company._count?.professionals || 0}</strong>
+                          <br />
+                          <small>
+                            Limite:{" "}
+                            {company.planLimits?.professionals ?? "—"}
+                          </small>
+                        </td>
+
+                        <td>{company._count?.clients || 0}</td>
+
+                        <td>{company._count?.appointments || 0}</td>
+
+                        <td>
+                          <div className="table-actions">
+                            {!isActive && (
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  updateCompanyStatus(company.id, "active")
+                                }
+                                disabled={isUpdating}
+                              >
+                                Ativar
+                              </button>
+                            )}
+
+                            {isActive && (
+                              <button
+                                type="button"
+                                className="danger-button"
+                                onClick={() =>
+                                  updateCompanyStatus(company.id, "inactive")
+                                }
+                                disabled={isUpdating}
+                              >
+                                Bloquear
+                              </button>
+                            )}
+
                             <button
                               type="button"
                               className="danger-button"
-                              onClick={() =>
-                                updateCompanyStatus(company.id, "inactive")
-                              }
+                              onClick={() => deleteCompany(company)}
                               disabled={isUpdating}
                             >
-                              Bloquear
+                              Excluir
                             </button>
-                          )}
-
-                          <button
-                            type="button"
-                            className="danger-button"
-                            onClick={() => deleteCompany(company)}
-                            disabled={isUpdating}
-                          >
-                            Excluir
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })
-              )}
-            </tbody>
-          </table>
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
+              </tbody>
+            </table>
+          </div>
         </div>
       </main>
     </div>

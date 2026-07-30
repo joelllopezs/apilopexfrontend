@@ -2515,3 +2515,61 @@ button.primary-button:disabled {
     font-size: 21px;
   }
 }
+
+/* =========================
+   ADMIN MASTER - PLANOS
+========================= */
+
+.admin-table-scroll {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.admin-plan-cell {
+  display: grid;
+  gap: 8px;
+  min-width: 130px;
+}
+
+.plan-badge {
+  width: fit-content;
+  padding: 6px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 900;
+  border: 1px solid var(--border);
+}
+
+.plan-badge.start {
+  color: #bfdbfe;
+  background: rgba(59, 130, 246, 0.12);
+  border-color: rgba(59, 130, 246, 0.34);
+}
+
+.plan-badge.pro {
+  color: #ddd6fe;
+  background: rgba(139, 92, 246, 0.14);
+  border-color: rgba(139, 92, 246, 0.36);
+}
+
+.plan-badge.premium {
+  color: #fde68a;
+  background: rgba(245, 158, 11, 0.14);
+  border-color: rgba(245, 158, 11, 0.38);
+}
+
+.admin-plan-select {
+  min-width: 120px;
+  height: 36px;
+  padding: 0 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: var(--surface-2);
+  color: var(--text);
+  outline: none;
+}
+
+.admin-plan-select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
