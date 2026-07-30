@@ -5,8 +5,10 @@ import api from "../api/api";
 const PLANS = [
   {
     id: "start",
+    icon: "○",
     name: "Start",
-    price: "R$ 49,90/mês",
+    price: "R$ 49,90",
+    period: "/mês",
     description: "Ideal para começar com agenda online.",
     professionals: "Até 2 profissionais",
     features: [
@@ -18,8 +20,10 @@ const PLANS = [
   },
   {
     id: "pro",
+    icon: "◇",
     name: "Pro",
-    price: "R$ 79,90/mês",
+    price: "R$ 79,90",
+    period: "/mês",
     description: "Para equipes pequenas em crescimento.",
     professionals: "Até 5 profissionais",
     features: [
@@ -32,8 +36,10 @@ const PLANS = [
   },
   {
     id: "premium",
+    icon: "✦",
     name: "Premium",
-    price: "R$ 149,90/mês",
+    price: "R$ 149,90",
+    period: "/mês",
     description: "Para empresas com operação maior.",
     professionals: "Até 15 profissionais",
     features: [
@@ -322,13 +328,13 @@ export default function RegisterCompany() {
                   <button
                     key={plan.id}
                     type="button"
-                    className={
-                      selected
-                        ? "register-plan-card selected"
-                        : plan.featured
-                        ? "register-plan-card featured"
-                        : "register-plan-card"
-                    }
+                    className={[
+                      "register-plan-card",
+                      selected ? "selected" : "",
+                      plan.featured ? "featured" : "",
+                    ]
+                      .filter(Boolean)
+                      .join(" ")}
                     onClick={() =>
                       setForm({
                         ...form,
@@ -342,12 +348,21 @@ export default function RegisterCompany() {
                       </span>
                     )}
 
-                    <div className="register-plan-header">
-                      <strong>{plan.name}</strong>
-                      <span>{plan.price}</span>
+                    {selected && <span className="register-plan-check">✓</span>}
+
+                    <div className="register-plan-top">
+                      <div className="register-plan-icon">{plan.icon}</div>
+
+                      <div className="register-plan-title">
+                        <strong>{plan.name}</strong>
+                        <p>{plan.description}</p>
+                      </div>
                     </div>
 
-                    <p>{plan.description}</p>
+                    <div className="register-plan-price">
+                      <strong>{plan.price}</strong>
+                      <span>{plan.period}</span>
+                    </div>
 
                     <div className="register-plan-limit">
                       {plan.professionals}
@@ -359,8 +374,8 @@ export default function RegisterCompany() {
                       ))}
                     </ul>
 
-                    <span className="register-plan-select-text">
-                      {selected ? "Plano selecionado" : "Selecionar plano"}
+                    <span className="register-plan-button">
+                      {selected ? "Plano selecionado" : "Escolher este plano"}
                     </span>
                   </button>
                 );

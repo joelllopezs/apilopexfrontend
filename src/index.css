@@ -2517,7 +2517,7 @@ button.primary-button:disabled {
 }
 
 /* =========================
-   CADASTRO DE EMPRESA - PLANOS
+   CADASTRO DE EMPRESA - PLANOS PREMIUM GLASS
 ========================= */
 
 .register-company-page {
@@ -2541,132 +2541,237 @@ button.primary-button:disabled {
   width: 100%;
   text-align: left;
   padding: 16px;
+  min-height: 292px;
   border-radius: 18px;
-  border: 1px solid rgba(255, 255, 255, 0.10);
-  background: rgba(255, 255, 255, 0.04);
-  backdrop-filter: blur(14px);
-  -webkit-backdrop-filter: blur(14px);
-  color: #f5f5f7;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.06),
+      rgba(255, 255, 255, 0.025)
+    );
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  color: #f6f3ff;
   cursor: pointer;
-  transition: transform 0.18s ease, border-color 0.18s ease,
-    box-shadow 0.18s ease, background 0.18s ease;
-  min-height: 320px;
+  overflow: hidden;
+  transition:
+    transform 0.18s ease,
+    border-color 0.18s ease,
+    box-shadow 0.18s ease,
+    background 0.18s ease;
+}
+
+.register-plan-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at top right,
+    rgba(136, 90, 254, 0.16),
+    transparent 38%
+  );
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
 }
 
 .register-plan-card:hover {
   transform: translateY(-2px);
-  border-color: rgba(136, 90, 254, 0.35);
-  background: rgba(255, 255, 255, 0.06);
-  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.18);
+  border-color: rgba(136, 90, 254, 0.38);
+  box-shadow: 0 14px 34px rgba(0, 0, 0, 0.22);
+}
+
+.register-plan-card:hover::before {
+  opacity: 1;
 }
 
 .register-plan-card.selected {
-  border-color: rgba(136, 90, 254, 0.65);
-  background: rgba(136, 90, 254, 0.10);
-  box-shadow: 0 0 0 1px rgba(136, 90, 254, 0.22);
+  border-color: rgba(136, 90, 254, 0.72);
+  background:
+    linear-gradient(
+      180deg,
+      rgba(136, 90, 254, 0.13),
+      rgba(255, 255, 255, 0.035)
+    );
+  box-shadow:
+    0 0 0 1px rgba(136, 90, 254, 0.18),
+    0 16px 38px rgba(0, 0, 0, 0.24);
 }
 
 .register-plan-card.featured {
-  border-color: rgba(136, 90, 254, 0.28);
+  border-color: rgba(136, 90, 254, 0.34);
 }
 
 .register-plan-highlight {
   position: absolute;
-  top: -10px;
-  right: 14px;
-  padding: 5px 10px;
+  top: 12px;
+  right: 12px;
+  padding: 5px 9px;
   border-radius: 999px;
-  background: rgba(136, 90, 254, 0.92);
+  background: rgba(136, 90, 254, 0.86);
   color: #ffffff;
   font-size: 10px;
   font-weight: 600;
   letter-spacing: 0.2px;
-  box-shadow: 0 8px 18px rgba(136, 90, 254, 0.22);
+  z-index: 2;
 }
 
-.register-plan-header {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: 10px;
-}
-
-.register-plan-header strong {
-  font-size: 1.7rem;
-  line-height: 1.1;
-  font-weight: 700;
+.register-plan-check {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 26px;
+  height: 26px;
+  display: grid;
+  place-items: center;
+  border-radius: 999px;
+  background: #885afe;
   color: #ffffff;
-}
-
-.register-plan-header span {
-  display: inline-flex;
-  align-self: flex-start;
-  padding: 6px 10px;
-  border-radius: 10px;
-  background: rgba(136, 90, 254, 0.12);
-  border: 1px solid rgba(136, 90, 254, 0.22);
-  color: #d6baff;
-  font-size: 1rem;
+  font-size: 14px;
   font-weight: 700;
-  line-height: 1;
+  z-index: 3;
+  box-shadow: 0 8px 18px rgba(136, 90, 254, 0.28);
 }
 
-.register-plan-card p {
-  margin: 0 0 12px;
-  color: rgba(255, 255, 255, 0.78);
-  line-height: 1.45;
-  font-size: 0.92rem;
+.register-plan-card.selected.featured .register-plan-highlight {
+  display: none;
+}
+
+.register-plan-top {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-start;
+  gap: 11px;
+  padding-right: 42px;
+  margin-bottom: 14px;
+}
+
+.register-plan-icon {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: rgba(136, 90, 254, 0.12);
+  border: 1px solid rgba(136, 90, 254, 0.24);
+  color: #d7c0ff;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.register-plan-title strong {
+  display: block;
+  margin-bottom: 5px;
+  color: #ffffff;
+  font-size: 1.22rem;
+  line-height: 1.1;
+  font-weight: 650;
+}
+
+.register-plan-title p {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 0.82rem;
+  line-height: 1.35;
   font-weight: 400;
-  min-height: 42px;
+}
+
+.register-plan-price {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+  margin-bottom: 12px;
+}
+
+.register-plan-price strong {
+  color: #ffffff;
+  font-size: 1.48rem;
+  line-height: 1;
+  font-weight: 720;
+  letter-spacing: -0.5px;
+}
+
+.register-plan-price span {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 0.86rem;
+  font-weight: 400;
 }
 
 .register-plan-limit {
+  position: relative;
+  z-index: 1;
   display: inline-flex;
   align-items: center;
-  padding: 7px 11px;
+  padding: 6px 10px;
   border-radius: 999px;
   margin-bottom: 12px;
-  background: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  font-size: 0.86rem;
-  font-weight: 600;
-  color: #ffffff;
+  background: rgba(255, 255, 255, 0.055);
+  border: 1px solid rgba(255, 255, 255, 0.085);
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 0.8rem;
+  font-weight: 520;
 }
 
 .register-plan-card ul {
+  position: relative;
+  z-index: 1;
   list-style: none;
   padding: 0;
   margin: 0;
   display: grid;
-  gap: 8px;
+  gap: 7px;
 }
 
 .register-plan-card li {
-  color: rgba(255, 255, 255, 0.78);
-  font-size: 0.9rem;
-  line-height: 1.38;
+  color: rgba(255, 255, 255, 0.68);
+  font-size: 0.82rem;
+  line-height: 1.32;
   font-weight: 400;
 }
 
 .register-plan-card li::before {
   content: "✓";
-  color: #b07cff;
-  font-weight: 700;
-  margin-right: 8px;
-}
-
-.register-plan-select-text {
-  display: block;
-  margin-top: 14px;
-  padding-top: 12px;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
-  color: #f4f4f6;
+  color: #b98aff;
   font-weight: 600;
-  font-size: 0.9rem;
+  margin-right: 7px;
 }
 
-.register-plan-card.selected .register-plan-select-text {
-  color: #d6baff;
+.register-plan-button {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 38px;
+  margin-top: 14px;
+  padding: 9px 12px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.055);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  color: rgba(255, 255, 255, 0.86);
+  font-size: 0.84rem;
+  font-weight: 550;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease;
+}
+
+.register-plan-card:hover .register-plan-button {
+  background: rgba(136, 90, 254, 0.14);
+  border-color: rgba(136, 90, 254, 0.28);
+  color: #ffffff;
+}
+
+.register-plan-card.selected .register-plan-button {
+  background: #885afe;
+  border-color: #885afe;
+  color: #ffffff;
 }
 
 @media (max-width: 860px) {
@@ -2678,11 +2783,7 @@ button.primary-button:disabled {
     min-height: auto;
   }
 
-  .register-plan-header strong {
-    font-size: 1.5rem;
-  }
-
-  .register-plan-header span {
-    font-size: 0.95rem;
+  .register-plan-price strong {
+    font-size: 1.35rem;
   }
 }
