@@ -2517,64 +2517,6 @@ button.primary-button:disabled {
 }
 
 /* =========================
-   ADMIN MASTER - PLANOS
-========================= */
-
-.admin-table-scroll {
-  width: 100%;
-  overflow-x: auto;
-}
-
-.admin-plan-cell {
-  display: grid;
-  gap: 8px;
-  min-width: 130px;
-}
-
-.plan-badge {
-  width: fit-content;
-  padding: 6px 10px;
-  border-radius: 999px;
-  font-size: 12px;
-  font-weight: 900;
-  border: 1px solid var(--border);
-}
-
-.plan-badge.start {
-  color: #bfdbfe;
-  background: rgba(59, 130, 246, 0.12);
-  border-color: rgba(59, 130, 246, 0.34);
-}
-
-.plan-badge.pro {
-  color: #ddd6fe;
-  background: rgba(139, 92, 246, 0.14);
-  border-color: rgba(139, 92, 246, 0.36);
-}
-
-.plan-badge.premium {
-  color: #fde68a;
-  background: rgba(245, 158, 11, 0.14);
-  border-color: rgba(245, 158, 11, 0.38);
-}
-
-.admin-plan-select {
-  min-width: 120px;
-  height: 36px;
-  padding: 0 10px;
-  border-radius: 10px;
-  border: 1px solid var(--border);
-  background: var(--surface-2);
-  color: var(--text);
-  outline: none;
-}
-
-.admin-plan-select:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-/* =========================
    CADASTRO DE EMPRESA - PLANOS
 ========================= */
 
@@ -2590,84 +2532,103 @@ button.primary-button:disabled {
 .register-plan-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 14px;
-  margin-bottom: 12px;
+  gap: 16px;
+  margin: 14px 0 12px;
 }
 
 .register-plan-card {
   position: relative;
   width: 100%;
   text-align: left;
-  padding: 18px;
+  padding: 20px;
   border-radius: 20px;
-  border: 1px solid var(--border);
-  background: rgba(255, 255, 255, 0.035);
-  color: var(--text);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  background: #171325;
+  color: #ffffff;
   cursor: pointer;
-  transition: transform 0.2s ease, border-color 0.2s ease, background 0.2s ease;
+  transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease,
+    background 0.2s ease;
 }
 
 .register-plan-card:hover {
-  transform: translateY(-2px);
-  border-color: color-mix(in srgb, var(--primary-color) 42%, var(--border));
+  transform: translateY(-3px);
+  border-color: rgba(136, 90, 254, 0.5);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.22);
 }
 
 .register-plan-card.selected {
-  border-color: var(--primary-color);
-  background: color-mix(in srgb, var(--primary-color) 16%, transparent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary-color) 14%, transparent);
+  background: linear-gradient(
+    180deg,
+    rgba(136, 90, 254, 0.14) 0%,
+    rgba(23, 19, 37, 1) 100%
+  );
+  border-color: #885afe;
+  box-shadow: 0 0 0 2px rgba(136, 90, 254, 0.18);
 }
 
 .register-plan-card.featured {
-  border-color: color-mix(in srgb, var(--primary-color) 45%, var(--border));
+  border-color: rgba(136, 90, 254, 0.38);
 }
 
 .register-plan-highlight {
   position: absolute;
-  top: -11px;
+  top: -12px;
   right: 16px;
-  padding: 5px 10px;
+  padding: 6px 12px;
   border-radius: 999px;
-  background: var(--primary-color);
+  background: #885afe;
   color: #ffffff;
   font-size: 11px;
-  font-weight: 900;
+  font-weight: 800;
+  box-shadow: 0 8px 20px rgba(136, 90, 254, 0.28);
 }
 
 .register-plan-header {
-  display: grid;
-  gap: 5px;
-  margin-bottom: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 14px;
 }
 
 .register-plan-header strong {
-  font-size: 19px;
-  color: var(--text);
+  font-size: 2rem;
+  line-height: 1.1;
+  font-weight: 800;
+  color: #ffffff;
 }
 
 .register-plan-header span {
-  font-size: 15px;
-  color: var(--primary-color);
+  display: inline-flex;
+  align-self: flex-start;
+  padding: 8px 14px;
+  border-radius: 12px;
+  background: rgba(136, 90, 254, 0.14);
+  border: 1px solid rgba(136, 90, 254, 0.3);
+  color: #c9a9ff;
+  font-size: 1.15rem;
   font-weight: 900;
+  line-height: 1;
 }
 
 .register-plan-card p {
-  margin: 0 0 12px;
-  color: var(--muted);
-  line-height: 1.5;
-  font-size: 13px;
+  margin: 0 0 14px;
+  color: #d6d0e6;
+  line-height: 1.55;
+  font-size: 0.98rem;
+  min-height: 48px;
 }
 
 .register-plan-limit {
-  width: fit-content;
-  padding: 7px 10px;
+  display: inline-flex;
+  align-items: center;
+  padding: 8px 12px;
   border-radius: 999px;
-  margin-bottom: 12px;
+  margin-bottom: 14px;
   background: rgba(255, 255, 255, 0.06);
-  border: 1px solid var(--border);
-  font-size: 12px;
-  font-weight: 900;
-  color: var(--text);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-size: 0.92rem;
+  font-weight: 800;
+  color: #ffffff;
 }
 
 .register-plan-card ul {
@@ -2675,33 +2636,46 @@ button.primary-button:disabled {
   padding: 0;
   margin: 0;
   display: grid;
-  gap: 7px;
+  gap: 10px;
 }
 
 .register-plan-card li {
-  color: var(--muted);
-  font-size: 12px;
+  color: #d6d0e6;
+  font-size: 0.95rem;
+  line-height: 1.4;
 }
 
 .register-plan-card li::before {
   content: "✓";
-  color: var(--primary-color);
+  color: #a56bff;
   font-weight: 900;
-  margin-right: 6px;
+  margin-right: 8px;
 }
 
 .register-plan-select-text {
   display: block;
-  margin-top: 14px;
-  padding-top: 12px;
-  border-top: 1px solid var(--border);
-  color: var(--text);
-  font-weight: 900;
-  font-size: 13px;
+  margin-top: 16px;
+  padding-top: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  color: #ffffff;
+  font-weight: 800;
+  font-size: 0.95rem;
+}
+
+.register-plan-card.selected .register-plan-select-text {
+  color: #c9a9ff;
 }
 
 @media (max-width: 860px) {
   .register-plan-grid {
     grid-template-columns: 1fr;
+  }
+
+  .register-plan-header strong {
+    font-size: 1.7rem;
+  }
+
+  .register-plan-header span {
+    font-size: 1rem;
   }
 }
