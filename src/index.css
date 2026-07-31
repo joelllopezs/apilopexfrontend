@@ -3408,3 +3408,49 @@ td small {
     grid-template-columns: 1fr;
   }
 }
+
+/* =========================
+   ADMIN MASTER - AÇÕES RÁPIDAS
+========================= */
+
+.admin-actions-stack {
+  display: grid;
+  gap: 10px;
+  min-width: 230px;
+}
+
+.admin-main-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.admin-quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
+
+.admin-quick-actions button {
+  min-height: 30px;
+  padding: 6px 9px;
+  border-radius: 999px;
+  border: 1px solid color-mix(in srgb, var(--primary-color) 35%, var(--border));
+  background: color-mix(in srgb, var(--primary-color) 8%, transparent);
+  color: var(--text);
+  font-size: 12px;
+  font-weight: 800;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.admin-quick-actions button:hover {
+  background: color-mix(in srgb, var(--primary-color) 16%, transparent);
+}
+
+.admin-quick-actions button:disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+}

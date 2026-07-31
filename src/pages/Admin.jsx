@@ -280,6 +280,72 @@ export default function Admin() {
     }
   }
 
+  async function runSubscriptionQuickAction(company, action) {
+    try {
+      setUpdatingId(company.id);
+      setMessage("");
+
+      const actionConfig = {
+        renew: {
+          endpoint: `/admin/companies/${company.id}/subscription/renew`,
+          payload: {
+            days: 30,
+          },
+          fallback: "Assinatura renovada por mais 30 dias.",
+        },
+        extendTrial: {
+          endpoint: `/admin/companies/${company.id}/subscription/extend-trial`,
+          payload: {
+            days: 7,
+          },
+          fallback: "Trial estendido por mais 7 dias.",
+        },
+        markActive: {
+          endpoint: `/admin/companies/${company.id}/subscription/mark-active`,
+          payload: {},
+          fallback: "Assinatura marcada como ativa.",
+        },
+        markOverdue: {
+          endpoint: `/admin/companies/${company.id}/subscription/mark-overdue`,
+          payload: {},
+          fallback: "Assinatura marcada como atrasada.",
+        },
+        reactivate: {
+          endpoint: `/admin/companies/${company.id}/subscription/reactivate`,
+          payload: {
+            days: 30,
+          },
+          fallback: "Empresa reativada com assinatura ativa por 30 dias.",
+        },
+      };
+
+      const selectedAction = actionConfig[action];
+
+      if (!selectedAction) {
+        setMessage("Ação rápida inválida.");
+        return;
+      }
+
+      const response = await api.patch(
+        selectedAction.endpoint,
+        selectedAction.payload
+      );
+
+      setMessage(response.data?.message || selectedAction.fallback);
+
+      await loadAdminData();
+    } catch (error) {
+      console.error(error);
+
+      setMessage(
+        error.response?.data?.message ||
+          "Erro ao executar ação rápida de assinatura."
+      );
+    } finally {
+      setUpdatingId("");
+    }
+  }
+
   async function deleteCompany(company) {
     const firstConfirm = window.confirm(
       `Deseja realmente excluir permanentemente a empresa "${company.name}"? Essa ação apagará usuários, serviços, profissionais, clientes, horários e agendamentos dessa empresa.`
@@ -723,40 +789,106 @@ export default function Admin() {
                         <td>{company._count?.appointments || 0}</td>
 
                         <td>
-                          <div className="table-actions">
-                            {!isActive && (
-                              <button
-                                type="button"
-                                onClick={() =>
-                                  updateCompanyStatus(company.id, "active")
-                                }
-                                disabled={isUpdating}
-                              >
-                                Ativar
-                              </button>
-                            )}
+                          <div className="table-actions admin-actions-stack">
+                            <div className="admin-main-actions">
+                              {!isActive && (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    updateCompanyStatus(company.id, "active")
+                                  }
+                                  disabled={isUpdating}
+                                >
+                                  Ativar
+                                </button>
+                              )}
 
-                            {isActive && (
+                              {isActive && (
+                                <button
+                                  type="button"
+                                  className="danger-button"
+                                  onClick={() =>
+                                    updateCompanyStatus(company.id, "inactive")
+                                  }
+                                  disabled={isUpdating}
+                                >
+                                  Bloquear
+                                </button>
+                              )}
+
                               <button
                                 type="button"
                                 className="danger-button"
+                                onClick={() => deleteCompany(company)}
+                                disabled={isUpdating}
+                              >
+                                Excluir
+                              </button>
+                            </div>
+
+                            <div className="admin-quick-actions">
+                              <button
+                                type="button"
                                 onClick={() =>
-                                  updateCompanyStatus(company.id, "inactive")
+                                  runSubscriptionQuickAction(company, "renew")
                                 }
                                 disabled={isUpdating}
                               >
-                                Bloquear
+                                +30 dias
                               </button>
-                            )}
 
-                            <button
-                              type="button"
-                              className="danger-button"
-                              onClick={() => deleteCompany(company)}
-                              disabled={isUpdating}
-                            >
-                              Excluir
-                            </button>
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  runSubscriptionQuickAction(
+                                    company,
+                                    "extendTrial"
+                                  )
+                                }
+                                disabled={isUpdating}
+                              >
+                                +7 trial
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  runSubscriptionQuickAction(
+                                    company,
+                                    "markActive"
+                                  )
+                                }
+                                disabled={isUpdating}
+                              >
+                                Ativa
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  runSubscriptionQuickAction(
+                                    company,
+                                    "markOverdue"
+                                  )
+                                }
+                                disabled={isUpdating}
+                              >
+                                Atrasar
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  runSubscriptionQuickAction(
+                                    company,
+                                    "reactivate"
+                                  )
+                                }
+                                disabled={isUpdating}
+                              >
+                                Reativar
+                              </button>
+                            </div>
                           </div>
                         </td>
                       </tr>
