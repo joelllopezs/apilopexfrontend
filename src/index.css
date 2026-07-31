@@ -4269,3 +4269,280 @@ a,
 .form-card::after {
   content: none !important;
 }
+
+/* =========================
+   CORREÇÃO FINAL - ADMIN MASTER E DASHBOARD
+========================= */
+
+/* Remove efeito ruim do ajuste anterior nas tabelas */
+.table-card th,
+.table-card td {
+  white-space: normal;
+}
+
+/* Painel Master: tabela grande deve rolar para o lado, não esmagar */
+.admin-table-scroll {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: hidden;
+  -webkit-overflow-scrolling: touch;
+}
+
+.admin-table-card {
+  overflow: hidden;
+}
+
+.admin-table-card table {
+  min-width: 1850px !important;
+  table-layout: fixed;
+}
+
+.admin-table-card th,
+.admin-table-card td {
+  white-space: nowrap;
+  vertical-align: middle;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Larguras mais corretas das colunas do Admin */
+.admin-table-card th:nth-child(1),
+.admin-table-card td:nth-child(1) {
+  width: 165px;
+}
+
+.admin-table-card th:nth-child(2),
+.admin-table-card td:nth-child(2) {
+  width: 130px;
+}
+
+.admin-table-card th:nth-child(3),
+.admin-table-card td:nth-child(3) {
+  width: 170px;
+}
+
+.admin-table-card th:nth-child(4),
+.admin-table-card td:nth-child(4) {
+  width: 90px;
+}
+
+.admin-table-card th:nth-child(5),
+.admin-table-card td:nth-child(5) {
+  width: 95px;
+}
+
+.admin-table-card th:nth-child(6),
+.admin-table-card td:nth-child(6) {
+  width: 130px;
+}
+
+.admin-table-card th:nth-child(7),
+.admin-table-card td:nth-child(7),
+.admin-table-card th:nth-child(8),
+.admin-table-card td:nth-child(8),
+.admin-table-card th:nth-child(9),
+.admin-table-card td:nth-child(9) {
+  width: 170px;
+}
+
+.admin-table-card th:nth-child(10),
+.admin-table-card td:nth-child(10) {
+  width: 120px;
+}
+
+.admin-table-card th:nth-child(11),
+.admin-table-card td:nth-child(11),
+.admin-table-card th:nth-child(12),
+.admin-table-card td:nth-child(12),
+.admin-table-card th:nth-child(13),
+.admin-table-card td:nth-child(13),
+.admin-table-card th:nth-child(14),
+.admin-table-card td:nth-child(14),
+.admin-table-card th:nth-child(15),
+.admin-table-card td:nth-child(15) {
+  width: 105px;
+}
+
+.admin-table-card th:nth-child(16),
+.admin-table-card td:nth-child(16) {
+  width: 260px;
+}
+
+/* Dentro da coluna Empresa pode quebrar slug/nome sem bagunçar */
+.admin-table-card td:nth-child(1) strong,
+.admin-table-card td:nth-child(1) small {
+  display: block;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+/* E-mail pode quebrar sem esticar altura demais */
+.admin-table-card td:nth-child(3) {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+/* Inputs do Admin voltam ao tamanho correto */
+.admin-plan-select {
+  width: 105px !important;
+  min-width: 105px !important;
+}
+
+.admin-date-input {
+  width: 145px !important;
+  min-width: 145px !important;
+}
+
+.admin-plan-cell,
+.admin-subscription-cell {
+  width: fit-content;
+  min-width: 0;
+}
+
+/* Badges não ficam espremidos */
+.status-badge,
+.plan-badge,
+.subscription-badge {
+  white-space: nowrap;
+  width: fit-content;
+}
+
+/* Ações do Admin organizadas */
+.admin-actions-stack {
+  min-width: 230px;
+}
+
+.admin-main-actions,
+.admin-quick-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.admin-main-actions button,
+.admin-quick-actions button {
+  white-space: nowrap;
+}
+
+/* Tabelas normais de Serviços, Clientes e Profissionais */
+.table-card:not(.admin-table-card) table {
+  min-width: 760px;
+  table-layout: auto;
+}
+
+.table-card:not(.admin-table-card) th,
+.table-card:not(.admin-table-card) td {
+  white-space: nowrap;
+  vertical-align: middle;
+}
+
+/* Colunas que podem ter texto maior */
+.table-card:not(.admin-table-card) td:nth-child(2),
+.table-card:not(.admin-table-card) td:nth-child(3) {
+  white-space: normal;
+  overflow-wrap: anywhere;
+  max-width: 260px;
+}
+
+/* Agenda pode continuar com scroll horizontal interno */
+.appointments-table-card table {
+  min-width: 1050px !important;
+}
+
+/* =========================
+   DASHBOARD MAIS COMPACTO
+========================= */
+
+.dashboard-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(135px, 1fr)) !important;
+  gap: 10px !important;
+  margin: 16px 0 !important;
+}
+
+.dashboard-card {
+  padding: 12px !important;
+  border-radius: 14px !important;
+  min-height: auto !important;
+}
+
+.dashboard-card span {
+  font-size: 12px !important;
+  margin-bottom: 6px !important;
+  line-height: 1.2;
+}
+
+.dashboard-card strong {
+  font-size: 22px !important;
+  line-height: 1.05 !important;
+}
+
+.dashboard-card small {
+  font-size: 11px !important;
+  margin-top: 5px !important;
+  line-height: 1.25 !important;
+}
+
+/* Notebook e telas maiores: menor, mas ainda com presença */
+@media (min-width: 1000px) {
+  .dashboard-cards {
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 14px !important;
+  }
+
+  .dashboard-card {
+    padding: 16px !important;
+  }
+
+  .dashboard-card strong {
+    font-size: 26px !important;
+  }
+}
+
+/* Tablet/celular: mantém dois por linha sempre que couber */
+@media (max-width: 760px) {
+  .dashboard-cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 9px !important;
+  }
+
+  .dashboard-card {
+    padding: 10px !important;
+  }
+
+  .dashboard-card span {
+    font-size: 11px !important;
+  }
+
+  .dashboard-card strong {
+    font-size: 20px !important;
+  }
+
+  .dashboard-card small {
+    font-size: 10px !important;
+  }
+}
+
+/* Celular muito pequeno */
+@media (max-width: 340px) {
+  .dashboard-cards {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Corrige dica de arrastar aparecendo em todo table-card, se tiver sido adicionada */
+.table-card::after {
+  content: none !important;
+}
+
+@media (max-width: 760px) {
+  .admin-table-scroll::after,
+  .appointments-table-card::after {
+    content: "Arraste a tabela para o lado";
+    display: block;
+    margin-top: 10px;
+    color: var(--muted);
+    font-size: 12px;
+    text-align: center;
+  }
+}
