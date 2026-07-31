@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import api from "../api/api";
 import Sidebar from "../components/Sidebar";
 
@@ -8,6 +8,11 @@ export default function Admin() {
   const [message, setMessage] = useState("");
   const [loading, setLoading] = useState(true);
   const [updatingId, setUpdatingId] = useState("");
+
+  const [searchTerm, setSearchTerm] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [planFilter, setPlanFilter] = useState("all");
+  const [subscriptionFilter, setSubscriptionFilter] = useState("all");
 
   function translateStatus(status) {
     const statusMap = {
@@ -65,6 +70,20 @@ export default function Admin() {
     return classMap[status] || "subscription-badge trial";
   }
 
+  function getCompanyRowClass(company) {
+    const subscriptionStatus = company.subscriptionStatus || "trial";
+
+    if (subscriptionStatus === "overdue") {
+      return "admin-company-row overdue";
+    }
+
+    if (subscriptionStatus === "cancelled") {
+      return "admin-company-row cancelled";
+    }
+
+    return "admin-company-row";
+  }
+
   function formatDate(value) {
     if (!value) return "—";
 
@@ -84,6 +103,56 @@ export default function Admin() {
 
     return date.toISOString().slice(0, 10);
   }
+
+  function getCompanyOwner(company) {
+    return (
+      company.users?.find((user) => user.role === "company_admin") ||
+      company.users?.[0]
+    );
+  }
+
+  function clearFilters() {
+    setSearchTerm("");
+    setStatusFilter("all");
+    setPlanFilter("all");
+    setSubscriptionFilter("all");
+  }
+
+  const filteredCompanies = useMemo(() => {
+    return companies.filter((company) => {
+      const owner = getCompanyOwner(company);
+
+      const normalizedSearch = searchTerm.trim().toLowerCase();
+
+      const companyStatus = company.status || "inactive";
+      const companyPlan = company.plan || "start";
+      const subscriptionStatus = company.subscriptionStatus || "trial";
+
+      const matchesSearch =
+        !normalizedSearch ||
+        company.name?.toLowerCase().includes(normalizedSearch) ||
+        company.slug?.toLowerCase().includes(normalizedSearch) ||
+        company.email?.toLowerCase().includes(normalizedSearch) ||
+        owner?.name?.toLowerCase().includes(normalizedSearch) ||
+        owner?.email?.toLowerCase().includes(normalizedSearch);
+
+      const matchesStatus =
+        statusFilter === "all" || companyStatus === statusFilter;
+
+      const matchesPlan = planFilter === "all" || companyPlan === planFilter;
+
+      const matchesSubscription =
+        subscriptionFilter === "all" ||
+        subscriptionStatus === subscriptionFilter;
+
+      return (
+        matchesSearch &&
+        matchesStatus &&
+        matchesPlan &&
+        matchesSubscription
+      );
+    });
+  }, [companies, searchTerm, statusFilter, planFilter, subscriptionFilter]);
 
   async function loadAdminData() {
     try {
@@ -400,6 +469,73 @@ export default function Admin() {
             </div>
           </div>
 
+          <div className="admin-filters-panel">
+            <div className="admin-search-field">
+              <label>Buscar empresa</label>
+              <input
+                value={searchTerm}
+                onChange={(event) => setSearchTerm(event.target.value)}
+                placeholder="Nome, slug, responsável ou e-mail"
+              />
+            </div>
+
+            <div>
+              <label>Status</label>
+              <select
+                value={statusFilter}
+                onChange={(event) => setStatusFilter(event.target.value)}
+              >
+                <option value="all">Todos</option>
+                <option value="active">Ativas</option>
+                <option value="inactive">Bloqueadas</option>
+              </select>
+            </div>
+
+            <div>
+              <label>Plano</label>
+              <select
+                value={planFilter}
+                onChange={(event) => setPlanFilter(event.target.value)}
+              >
+                <option value="all">Todos</option>
+                <option value="start">Start</option>
+                <option value="pro">Pro</option>
+                <option value="premium">Premium</option>
+              </select>
+            </div>
+
+            <div>
+              <label>Assinatura</label>
+              <select
+                value={subscriptionFilter}
+                onChange={(event) => setSubscriptionFilter(event.target.value)}
+              >
+                <option value="all">Todas</option>
+                <option value="trial">Trial</option>
+                <option value="active">Ativa</option>
+                <option value="overdue">Atrasada</option>
+                <option value="cancelled">Cancelada</option>
+              </select>
+            </div>
+
+            <button
+              type="button"
+              className="admin-clear-filters-button"
+              onClick={clearFilters}
+            >
+              Limpar filtros
+            </button>
+          </div>
+
+          <div className="admin-filter-result">
+            <strong>{filteredCompanies.length}</strong>
+            <span>
+              {filteredCompanies.length === 1
+                ? "empresa encontrada"
+                : "empresas encontradas"}
+            </span>
+          </div>
+
           <div className="admin-table-scroll">
             <table>
               <thead>
@@ -424,17 +560,15 @@ export default function Admin() {
               </thead>
 
               <tbody>
-                {companies.length === 0 ? (
+                {filteredCompanies.length === 0 ? (
                   <tr>
-                    <td colSpan="16">Nenhuma empresa cadastrada.</td>
+                    <td colSpan="16">
+                      Nenhuma empresa encontrada com os filtros atuais.
+                    </td>
                   </tr>
                 ) : (
-                  companies.map((company) => {
-                    const owner =
-                      company.users?.find(
-                        (user) => user.role === "company_admin"
-                      ) || company.users?.[0];
-
+                  filteredCompanies.map((company) => {
+                    const owner = getCompanyOwner(company);
                     const isActive = company.status === "active";
                     const isUpdating = updatingId === company.id;
                     const companyPlan = company.plan || "start";
@@ -442,7 +576,10 @@ export default function Admin() {
                       company.subscriptionStatus || "trial";
 
                     return (
-                      <tr key={company.id}>
+                      <tr
+                        key={company.id}
+                        className={getCompanyRowClass(company)}
+                      >
                         <td>
                           <strong>{company.name}</strong>
                           <br />
