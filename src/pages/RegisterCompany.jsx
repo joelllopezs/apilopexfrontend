@@ -458,6 +458,7 @@ export default function RegisterCompany() {
           <div>
             <h1>Criar conta</h1>
             <p>Cadastre sua empresa na LopeX Agenda</p>
+            <p>Versão atualizada Vercel</p>
           </div>
         </div>
 
