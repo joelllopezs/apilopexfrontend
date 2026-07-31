@@ -12,6 +12,7 @@ import RegisterCompany from "./pages/RegisterCompany";
 import PublicBooking from "./pages/PublicBooking";
 import CancelAppointment from "./pages/CancelAppointment";
 import Subscription from "./pages/Subscription";
+import AuditLogs from "./pages/AuditLogs";
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem("@lopex:token");
@@ -59,6 +60,15 @@ export default function App() {
           element={
             <PrivateRoute>
               <Admin />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/audit-logs"
+          element={
+            <PrivateRoute>
+              <AuditLogs />
             </PrivateRoute>
           }
         />
