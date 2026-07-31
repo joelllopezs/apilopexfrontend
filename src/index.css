@@ -3603,3 +3603,461 @@ td small {
     align-items: flex-start;
   }
 }
+
+/* =========================
+   RESPONSIVIDADE FINAL / ANTI BARRA HORIZONTAL
+   LopeX Agenda MVP v1
+========================= */
+
+html,
+body,
+#root {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+body {
+  min-width: 0;
+}
+
+*,
+*::before,
+*::after {
+  min-width: 0;
+}
+
+img,
+svg,
+video,
+canvas {
+  max-width: 100%;
+}
+
+button,
+input,
+select,
+textarea {
+  max-width: 100%;
+}
+
+/* Evita que o uso de 100vw gere barra horizontal por causa da scrollbar */
+.main-content,
+.app-layout > main,
+.app-layout > section,
+.app-layout > .content {
+  width: auto;
+  max-width: none;
+  overflow-x: clip;
+}
+
+/* Desktop com sidebar recolhida */
+@media (min-width: 901px) {
+  .main-content,
+  .app-layout > main,
+  .app-layout > section,
+  .app-layout > .content {
+    margin-left: var(--sidebar-collapsed-width);
+    width: calc(100% - var(--sidebar-collapsed-width));
+    max-width: calc(100% - var(--sidebar-collapsed-width));
+    padding-left: clamp(24px, 3.5vw, 56px);
+    padding-right: clamp(24px, 3.5vw, 56px);
+  }
+}
+
+/* Mobile/tablet */
+@media (max-width: 900px) {
+  .main-content,
+  .app-layout > main,
+  .app-layout > section,
+  .app-layout > .content {
+    margin-left: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 88px 16px 28px !important;
+    overflow-x: hidden;
+  }
+}
+
+@media (max-width: 520px) {
+  .main-content,
+  .app-layout > main,
+  .app-layout > section,
+  .app-layout > .content {
+    padding: 84px 12px 22px !important;
+  }
+}
+
+/* Títulos e linhas superiores não estouram */
+.dashboard-title-row,
+.admin-title-row,
+.business-hours-title-row,
+.company-title-row,
+.table-header-row,
+.appointments-header,
+.dashboard-section-header,
+.subscription-usage-header,
+.company-plan-main {
+  min-width: 0;
+}
+
+.dashboard-title-row > div,
+.admin-title-row > div,
+.business-hours-title-row > div,
+.company-title-row > div,
+.table-header-row > div,
+.appointments-header > div,
+.dashboard-section-header > div,
+.company-plan-main > div {
+  min-width: 0;
+}
+
+.dashboard-title-row h1,
+.admin-title-row h1,
+.business-hours-title-row h1,
+.company-title-row h1,
+.main-content h1 {
+  overflow-wrap: anywhere;
+}
+
+/* Cards e painéis sempre cabem na tela */
+.form-card,
+.table-card,
+.company-preview-card,
+.dashboard-card,
+.company-plan-panel,
+.subscription-hero,
+.subscription-card,
+.subscription-usage-card,
+.public-booking-card,
+.public-booking-main-card,
+.public-booking-sidebar,
+.public-unavailable-card,
+.login-card,
+.login-side-panel {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Grids principais quebram melhor */
+.dashboard-cards,
+.company-plan-grid,
+.subscription-grid,
+.subscription-content-grid,
+.company-grid,
+.appointments-grid,
+.dashboard-grid,
+.login-shell,
+.public-booking-shell,
+.register-plan-grid {
+  width: 100%;
+  max-width: 100%;
+}
+
+/* Tabelas: rolagem só dentro do card, não na página inteira */
+.table-card,
+.admin-table-scroll,
+.appointments-table-card,
+.dashboard-table-card {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.table-card table,
+.admin-table-card table,
+.appointments-table-card table,
+.dashboard-table-card table {
+  max-width: none;
+}
+
+/* Barra interna mais discreta */
+.table-card::-webkit-scrollbar,
+.admin-table-scroll::-webkit-scrollbar,
+.appointments-table-card::-webkit-scrollbar,
+.dashboard-table-card::-webkit-scrollbar {
+  height: 8px;
+}
+
+.table-card::-webkit-scrollbar-thumb,
+.admin-table-scroll::-webkit-scrollbar-thumb,
+.appointments-table-card::-webkit-scrollbar-thumb,
+.dashboard-table-card::-webkit-scrollbar-thumb {
+  background: color-mix(in srgb, var(--primary-color) 38%, transparent);
+  border-radius: 999px;
+}
+
+/* Admin Master: filtros e ações mais seguros */
+.admin-filters-panel {
+  max-width: 100%;
+}
+
+.admin-search-field {
+  min-width: 0;
+}
+
+.admin-actions-stack {
+  min-width: 0;
+}
+
+.admin-main-actions,
+.admin-quick-actions,
+.table-actions,
+.public-cancel-actions,
+.public-link-actions,
+.form-actions-row,
+.business-hours-actions {
+  max-width: 100%;
+}
+
+.admin-main-actions button,
+.admin-quick-actions button,
+.table-actions button {
+  white-space: nowrap;
+}
+
+/* Inputs de data/select do admin não forçam a página inteira */
+.admin-plan-cell,
+.admin-subscription-cell {
+  min-width: 0;
+}
+
+.admin-plan-select,
+.admin-date-input {
+  min-width: 0;
+  width: 100%;
+}
+
+/* Textos longos, slugs e e-mails não estouram */
+td,
+th,
+small,
+strong,
+p,
+span,
+a,
+.public-link-value,
+.public-link-preview,
+.public-cancel-link {
+  overflow-wrap: anywhere;
+}
+
+/* Página pública: evita estouro em celular */
+.public-booking-polished,
+.public-booking-page {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.public-booking-shell {
+  width: min(1180px, 100%);
+}
+
+.public-booking-summary div {
+  min-width: 0;
+}
+
+.public-booking-summary strong {
+  overflow-wrap: anywhere;
+}
+
+.public-submit-area {
+  min-width: 0;
+}
+
+.public-submit-area > div {
+  min-width: 0;
+}
+
+/* Login/cadastro */
+.login-page,
+.register-company-page {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+}
+
+.login-shell {
+  width: min(1120px, 100%);
+}
+
+/* Correções fortes para telas pequenas */
+@media (max-width: 760px) {
+  .dashboard-cards,
+  .secondary-cards,
+  .company-plan-grid,
+  .subscription-grid,
+  .subscription-content-grid,
+  .dashboard-grid,
+  .appointments-grid,
+  .company-grid,
+  .login-shell,
+  .public-booking-shell,
+  .register-plan-grid {
+    grid-template-columns: 1fr !important;
+  }
+
+  .dashboard-title-row,
+  .admin-title-row,
+  .business-hours-title-row,
+  .company-title-row,
+  .table-header-row,
+  .appointments-header,
+  .dashboard-section-header,
+  .company-plan-main,
+  .subscription-hero,
+  .subscription-usage-header,
+  .public-submit-area {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  .dashboard-refresh-button,
+  .secondary-action-button,
+  .copy-link-button,
+  .public-submit-button,
+  .public-secondary-button,
+  .public-secondary-link,
+  .public-danger-link,
+  .public-danger-button,
+  .form-actions-row button,
+  .business-hours-actions button,
+  .public-link-actions button,
+  .public-cancel-actions button,
+  .public-cancel-actions a {
+    width: 100%;
+  }
+
+  .form-card,
+  .table-card,
+  .company-preview-card,
+  .company-plan-panel,
+  .subscription-hero,
+  .subscription-usage-card,
+  .public-booking-card,
+  .public-booking-main-card,
+  .polished-success-card,
+  .public-unavailable-card,
+  .login-card,
+  .login-side-panel {
+    padding: 18px !important;
+    border-radius: 18px !important;
+  }
+
+  .dashboard-card {
+    padding: 18px;
+  }
+
+  .dashboard-card strong {
+    font-size: 28px;
+  }
+
+  .company-plan-main h2,
+  .subscription-hero h2 {
+    font-size: 26px;
+  }
+
+  .subscription-price strong {
+    font-size: 26px;
+  }
+
+  .public-company-logo {
+    width: 56px;
+    height: 56px;
+    min-width: 56px;
+    border-radius: 16px;
+  }
+
+  .public-company-logo span {
+    font-size: 22px;
+  }
+
+  .public-mobile-header h1,
+  .public-booking-header h1 {
+    font-size: 22px;
+  }
+
+  .booking-success-box {
+    padding: 18px;
+  }
+
+  .booking-success-row {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Celular pequeno */
+@media (max-width: 430px) {
+  .main-content,
+  .app-layout > main,
+  .app-layout > section,
+  .app-layout > .content {
+    padding-left: 10px !important;
+    padding-right: 10px !important;
+  }
+
+  .mobile-menu-toggle {
+    left: 12px;
+    top: 14px;
+    width: 42px;
+    height: 42px;
+  }
+
+  .sidebar {
+    width: 282px;
+    max-width: 88vw;
+  }
+
+  .table-card th,
+  .table-card td {
+    padding: 12px 10px;
+    font-size: 13px;
+  }
+
+  .public-booking-polished {
+    padding: 8px;
+  }
+
+  .public-time-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .admin-filters-panel {
+    padding: 12px;
+  }
+
+  .admin-quick-actions button,
+  .table-actions button {
+    flex: 1 1 auto;
+  }
+}
+
+/* Telas bem estreitas */
+@media (max-width: 360px) {
+  .main-content,
+  .app-layout > main,
+  .app-layout > section,
+  .app-layout > .content {
+    padding-left: 8px !important;
+    padding-right: 8px !important;
+  }
+
+  .form-card,
+  .table-card,
+  .company-preview-card,
+  .company-plan-panel,
+  .subscription-hero,
+  .subscription-usage-card,
+  .public-booking-card,
+  .public-booking-main-card,
+  .polished-success-card,
+  .public-unavailable-card,
+  .login-card,
+  .login-side-panel {
+    padding: 14px !important;
+  }
+
+  .public-time-grid {
+    grid-template-columns: 1fr;
+  }
+}
