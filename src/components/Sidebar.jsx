@@ -14,6 +14,7 @@ import {
   X,
   CreditCard,
   FileClock,
+  BarChart3,
 } from "lucide-react";
 
 import api from "../api/api";
@@ -41,6 +42,11 @@ export default function Sidebar() {
       label: "Logs",
       icon: FileClock,
       onlySuperAdmin: true,
+    },
+    {
+      path: "/reports",
+      label: "Relatórios",
+      icon: BarChart3,
     },
     {
       path: "/services",
