@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import Sidebar from "../components/Sidebar";
 import api from "../api/api";
 
+const SUPPORT_WHATSAPP = "5514996732253";
+
 const PLAN_DETAILS = {
   start: {
     name: "Start",
@@ -9,6 +11,8 @@ const PLAN_DETAILS = {
     period: "/mês",
     description: "Ideal para começar com agenda online.",
     professionals: 2,
+    paymentUrl:
+      "https://link.infinitepay.io/srjot4/VC1DLUMtUg-feblSbYGIM-49,90",
     features: [
       "Até 2 profissionais ativos",
       "Serviços ilimitados",
@@ -23,6 +27,8 @@ const PLAN_DETAILS = {
     period: "/mês",
     description: "Para equipes pequenas em crescimento.",
     professionals: 5,
+    paymentUrl:
+      "https://link.infinitepay.io/srjot4/VC1DLUMtUg-nmehsAncbI-79,90",
     features: [
       "Até 5 profissionais ativos",
       "Tudo do plano Start",
@@ -37,6 +43,8 @@ const PLAN_DETAILS = {
     period: "/mês",
     description: "Para empresas com operação maior.",
     professionals: 15,
+    paymentUrl:
+      "https://link.infinitepay.io/srjot4/VC1DLUMtUg-03MK29CHcC-149,90",
     features: [
       "Até 15 profissionais ativos",
       "Tudo do plano Pro",
@@ -46,6 +54,8 @@ const PLAN_DETAILS = {
     ],
   },
 };
+
+const PLAN_ORDER = ["start", "pro", "premium"];
 
 export default function Subscription() {
   const [company, setCompany] = useState(null);
@@ -119,6 +129,21 @@ export default function Subscription() {
     return company?.subscriptionEnd;
   }
 
+  function getCompanyDocument() {
+    if (!company?.document) return "Não informado";
+
+    return company.document;
+  }
+
+  function getCompanyLocation() {
+    const city = company?.city || "";
+    const state = company?.state || "";
+
+    if (!city && !state) return "Não informado";
+
+    return [city, state].filter(Boolean).join(" / ");
+  }
+
   function getSubscriptionMessage() {
     if (!company) return "";
 
@@ -127,7 +152,7 @@ export default function Subscription() {
     const days = getDaysUntil(mainDate);
 
     if (status === "cancelled") {
-      return "Sua assinatura está cancelada. Entre em contato para reativar o acesso.";
+      return "Sua assinatura está cancelada. Escolha um plano abaixo para solicitar a reativação.";
     }
 
     if (status === "overdue") {
@@ -140,7 +165,7 @@ export default function Subscription() {
       }
 
       if (days < 0) {
-        return "Seu período de teste gratuito terminou.";
+        return "Seu período de teste gratuito terminou. Escolha um plano abaixo para continuar usando.";
       }
 
       return `Seu teste gratuito termina em ${days} dia${
@@ -154,13 +179,63 @@ export default function Subscription() {
       }
 
       if (days < 0) {
-        return "Sua assinatura venceu.";
+        return "Sua assinatura venceu. Escolha um plano abaixo para renovar.";
       }
 
       return `Sua assinatura vence em ${days} dia${days === 1 ? "" : "s"}.`;
     }
 
     return "Informações da assinatura disponíveis no painel.";
+  }
+
+  function openPaymentLink(planKey) {
+    const selectedPlan = PLAN_DETAILS[planKey];
+
+    if (!selectedPlan?.paymentUrl) {
+      setMessage("Link de pagamento não configurado para este plano.");
+      return;
+    }
+
+    window.open(selectedPlan.paymentUrl, "_blank", "noopener,noreferrer");
+  }
+
+  function buildSupportMessage(planKey = null) {
+    const selectedPlan = planKey ? PLAN_DETAILS[planKey] : getPlanDetails();
+
+    const lines = [
+      "Olá! Acabei de realizar ou desejo confirmar o pagamento da LopeX Agenda.",
+      "",
+      `Empresa: ${company?.name || "Não informado"}`,
+      `Slug: ${company?.slug || "Não informado"}`,
+      `E-mail: ${company?.email || "Não informado"}`,
+      `WhatsApp: ${company?.phone || "Não informado"}`,
+      `CPF/CNPJ: ${getCompanyDocument()}`,
+      `Cidade/UF: ${getCompanyLocation()}`,
+      "",
+      `Plano: ${selectedPlan?.name || "Não informado"}`,
+      `Valor: ${selectedPlan?.price || "Não informado"}`,
+      `Status atual: ${translateSubscriptionStatus(
+        company?.subscriptionStatus || "trial"
+      )}`,
+      "",
+      "Pode verificar e liberar/renovar minha assinatura?",
+    ];
+
+    return lines.join("\n");
+  }
+
+  function notifySupport(planKey = null) {
+    if (!SUPPORT_WHATSAPP || SUPPORT_WHATSAPP === "5514996732253") {
+      setMessage(
+        "Configure o número de suporte no arquivo Subscription.jsx antes de usar este botão."
+      );
+      return;
+    }
+
+    const text = encodeURIComponent(buildSupportMessage(planKey));
+    const url = `https://wa.me/${SUPPORT_WHATSAPP}?text=${text}`;
+
+    window.open(url, "_blank", "noopener,noreferrer");
   }
 
   async function loadSubscription() {
@@ -208,7 +283,7 @@ export default function Subscription() {
         <div className="dashboard-title-row">
           <div>
             <h1>Minha Assinatura</h1>
-            <p>Veja seu plano atual, limites e situação da assinatura.</p>
+            <p>Veja seu plano atual, limites, pagamento e situação da assinatura.</p>
           </div>
 
           <button
@@ -247,6 +322,14 @@ export default function Subscription() {
                 </span>
 
                 <p>{getSubscriptionMessage()}</p>
+
+                <button
+                  type="button"
+                  className="subscription-primary-payment-button"
+                  onClick={() => openPaymentLink(getPlanKey())}
+                >
+                  Pagar plano atual
+                </button>
               </div>
             </section>
 
@@ -306,6 +389,76 @@ export default function Subscription() {
               </small>
             </section>
 
+            <section className="table-card subscription-payment-card">
+              <div className="subscription-payment-header">
+                <div>
+                  <h2>Pagamento dos planos</h2>
+                  <p>
+                    Escolha o plano desejado, realize o pagamento pelo
+                    InfinitePay e depois avise o suporte para liberação.
+                  </p>
+                </div>
+              </div>
+
+              <div className="subscription-payment-grid">
+                {PLAN_ORDER.map((planKey) => {
+                  const item = PLAN_DETAILS[planKey];
+                  const isCurrentPlan = getPlanKey() === planKey;
+
+                  return (
+                    <div
+                      key={planKey}
+                      className={
+                        isCurrentPlan
+                          ? "subscription-payment-plan current"
+                          : "subscription-payment-plan"
+                      }
+                    >
+                      {isCurrentPlan && (
+                        <span className="subscription-current-plan-badge">
+                          Plano atual
+                        </span>
+                      )}
+
+                      <h3>{item.name}</h3>
+
+                      <p>{item.description}</p>
+
+                      <div className="subscription-payment-price">
+                        <strong>{item.price}</strong>
+                        <span>{item.period}</span>
+                      </div>
+
+                      <small>{item.professionals} profissionais ativos</small>
+
+                      <button
+                        type="button"
+                        onClick={() => openPaymentLink(planKey)}
+                      >
+                        Pagar {item.name}
+                      </button>
+
+                      <button
+                        type="button"
+                        className="secondary-action-button"
+                        onClick={() => notifySupport(planKey)}
+                      >
+                        Já paguei, avisar suporte
+                      </button>
+                    </div>
+                  );
+                })}
+              </div>
+
+              <div className="subscription-payment-note">
+                <strong>Importante:</strong>
+                <span>
+                  Após o pagamento, a liberação ainda é feita manualmente pelo
+                  Admin Master. Guarde o comprovante caso seja solicitado.
+                </span>
+              </div>
+            </section>
+
             <section className="subscription-content-grid">
               <div className="table-card subscription-features-card">
                 <h2>Recursos incluídos</h2>
@@ -322,16 +475,15 @@ export default function Subscription() {
 
                 <p>
                   Para upgrade, renovação, pagamento ou reativação da
-                  assinatura, entre em contato com o suporte responsável pela
-                  sua conta.
+                  assinatura, escolha um plano acima e envie a confirmação para
+                  o suporte.
                 </p>
 
                 <div className="subscription-contact-box">
-                  <strong>Solicitar atendimento</strong>
-                  <span>
-                    Informe o nome da empresa, plano desejado e situação da
-                    assinatura.
-                  </span>
+                  <strong>Dados para conferência</strong>
+                  <span>Empresa: {company.name}</span>
+                  <span>CPF/CNPJ: {getCompanyDocument()}</span>
+                  <span>Cidade/UF: {getCompanyLocation()}</span>
                 </div>
               </div>
             </section>
