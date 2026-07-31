@@ -23,6 +23,16 @@ function PrivateRoute({ children }) {
   return children;
 }
 
+function RedirectUnknownRoute() {
+  const token = localStorage.getItem("@lopex:token");
+
+  if (token) {
+    return <Navigate to="/dashboard" />;
+  }
+
+  return <Navigate to="/" />;
+}
+
 export default function App() {
   return (
     <BrowserRouter>
@@ -115,6 +125,8 @@ export default function App() {
             </PrivateRoute>
           }
         />
+
+        <Route path="*" element={<RedirectUnknownRoute />} />
       </Routes>
     </BrowserRouter>
   );
