@@ -12,6 +12,7 @@ import {
   ShieldCheck,
   Menu,
   X,
+  CreditCard,
 } from "lucide-react";
 
 import api from "../api/api";
@@ -58,6 +59,11 @@ export default function Sidebar() {
       path: "/appointments",
       label: "Agenda",
       icon: CalendarDays,
+    },
+    {
+      path: "/subscription",
+      label: "Minha Assinatura",
+      icon: CreditCard,
     },
     {
       path: "/company",
@@ -133,15 +139,15 @@ export default function Sidebar() {
   return (
     <>
       {!mobileOpen && (
-  <button
-    type="button"
-    className="mobile-menu-toggle"
-    onClick={() => setMobileOpen(true)}
-    aria-label="Abrir menu"
-  >
-    <Menu size={22} />
-  </button>
-)}
+        <button
+          type="button"
+          className="mobile-menu-toggle"
+          onClick={() => setMobileOpen(true)}
+          aria-label="Abrir menu"
+        >
+          <Menu size={22} />
+        </button>
+      )}
 
       {mobileOpen && (
         <button

@@ -11,6 +11,7 @@ import Company from "./pages/Company";
 import RegisterCompany from "./pages/RegisterCompany";
 import PublicBooking from "./pages/PublicBooking";
 import CancelAppointment from "./pages/CancelAppointment";
+import Subscription from "./pages/Subscription";
 
 function PrivateRoute({ children }) {
   const token = localStorage.getItem("@lopex:token");
@@ -29,7 +30,10 @@ export default function App() {
         <Route path="/" element={<Login />} />
         <Route path="/register-company" element={<RegisterCompany />} />
         <Route path="/agendar/:slug" element={<PublicBooking />} />
-        <Route path="/agendar/cancelar/:id/:cancelToken" element={<CancelAppointment />} />
+        <Route
+          path="/agendar/cancelar/:id/:cancelToken"
+          element={<CancelAppointment />}
+        />
 
         <Route
           path="/dashboard"
@@ -39,14 +43,25 @@ export default function App() {
             </PrivateRoute>
           }
         />
+
         <Route
           path="/admin"
           element={
-          <PrivateRoute>
-            <Admin />
-          </PrivateRoute>
-            }
-          />
+            <PrivateRoute>
+              <Admin />
+            </PrivateRoute>
+          }
+        />
+
+        <Route
+          path="/subscription"
+          element={
+            <PrivateRoute>
+              <Subscription />
+            </PrivateRoute>
+          }
+        />
+
         <Route
           path="/services"
           element={
