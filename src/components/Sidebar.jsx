@@ -13,6 +13,7 @@ import {
   Menu,
   X,
   CreditCard,
+  FileClock,
 } from "lucide-react";
 
 import api from "../api/api";
@@ -33,6 +34,12 @@ export default function Sidebar() {
       path: "/admin",
       label: "Admin Master",
       icon: ShieldCheck,
+      onlySuperAdmin: true,
+    },
+    {
+      path: "/audit-logs",
+      label: "Logs",
+      icon: FileClock,
       onlySuperAdmin: true,
     },
     {
