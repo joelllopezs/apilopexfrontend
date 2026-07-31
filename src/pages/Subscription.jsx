@@ -63,6 +63,22 @@ export default function Subscription() {
   const [loading, setLoading] = useState(true);
   const [message, setMessage] = useState("");
 
+  function onlyNumbers(value) {
+    return String(value || "").replace(/\D/g, "");
+  }
+
+  function getSupportWhatsAppNumber() {
+    const numbers = onlyNumbers(SUPPORT_WHATSAPP);
+
+    if (!numbers) return "";
+
+    if (numbers.startsWith("55")) {
+      return numbers;
+    }
+
+    return `55${numbers}`;
+  }
+
   function formatDate(value) {
     if (!value) return "—";
 
@@ -225,17 +241,23 @@ export default function Subscription() {
   }
 
   function notifySupport(planKey = null) {
-    if (!SUPPORT_WHATSAPP || SUPPORT_WHATSAPP === "5514996732253") {
+    const phone = getSupportWhatsAppNumber();
+
+    if (!phone || phone.length < 12) {
       setMessage(
-        "Configure o número de suporte no arquivo Subscription.jsx antes de usar este botão."
+        "Número de suporte inválido. Configure o SUPPORT_WHATSAPP com DDD e número."
       );
       return;
     }
 
     const text = encodeURIComponent(buildSupportMessage(planKey));
-    const url = `https://wa.me/${SUPPORT_WHATSAPP}?text=${text}`;
+    const url = `https://api.whatsapp.com/send?phone=${phone}&text=${text}`;
 
-    window.open(url, "_blank", "noopener,noreferrer");
+    const openedWindow = window.open(url, "_blank", "noopener,noreferrer");
+
+    if (!openedWindow) {
+      window.location.href = url;
+    }
   }
 
   async function loadSubscription() {
