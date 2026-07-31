@@ -3454,3 +3454,152 @@ td small {
   opacity: 0.55;
   cursor: not-allowed;
 }
+/* =========================
+   DASHBOARD - AVISOS DE ASSINATURA
+========================= */
+
+.company-subscription-alert.enhanced {
+  display: flex;
+  gap: 14px;
+  align-items: flex-start;
+  margin-bottom: 18px;
+  padding: 18px;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+}
+
+.company-subscription-alert-icon {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 34px;
+  display: grid;
+  place-items: center;
+  border-radius: 50%;
+  font-weight: 900;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.company-subscription-alert.enhanced strong {
+  display: block;
+  margin-bottom: 4px;
+  color: var(--text);
+  font-size: 16px;
+}
+
+.company-subscription-alert.enhanced span {
+  display: block;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.company-subscription-alert.enhanced small {
+  display: block;
+  margin-top: 8px;
+  color: var(--text);
+  font-weight: 700;
+}
+
+.company-subscription-alert.enhanced.success {
+  border-color: rgba(34, 197, 94, 0.35);
+  background:
+    radial-gradient(circle at top left, rgba(34, 197, 94, 0.12), transparent 32%),
+    var(--surface);
+}
+
+.company-subscription-alert.enhanced.success .company-subscription-alert-icon {
+  background: rgba(34, 197, 94, 0.16);
+  color: #86efac;
+}
+
+.company-subscription-alert.enhanced.info {
+  border-color: rgba(59, 130, 246, 0.35);
+  background:
+    radial-gradient(circle at top left, rgba(59, 130, 246, 0.12), transparent 32%),
+    var(--surface);
+}
+
+.company-subscription-alert.enhanced.info .company-subscription-alert-icon {
+  background: rgba(59, 130, 246, 0.16);
+  color: #93c5fd;
+}
+
+.company-subscription-alert.enhanced.warning {
+  border-color: rgba(245, 158, 11, 0.42);
+  background:
+    radial-gradient(circle at top left, rgba(245, 158, 11, 0.14), transparent 32%),
+    var(--surface);
+}
+
+.company-subscription-alert.enhanced.warning .company-subscription-alert-icon {
+  background: rgba(245, 158, 11, 0.18);
+  color: #fcd34d;
+}
+
+.company-subscription-alert.enhanced.danger {
+  border-color: rgba(239, 68, 68, 0.45);
+  background:
+    radial-gradient(circle at top left, rgba(239, 68, 68, 0.14), transparent 32%),
+    var(--surface);
+}
+
+.company-subscription-alert.enhanced.danger .company-subscription-alert-icon {
+  background: rgba(239, 68, 68, 0.18);
+  color: #fca5a5;
+}
+
+.enhanced-plan-panel {
+  display: grid;
+  gap: 18px;
+}
+
+.company-plan-progress-area {
+  display: grid;
+  gap: 10px;
+  padding: 16px;
+  border-radius: 18px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.035);
+}
+
+.company-plan-progress-area > div:first-child {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: center;
+}
+
+.company-plan-progress-area strong {
+  color: var(--text);
+}
+
+.company-plan-progress-area span,
+.company-plan-progress-area small {
+  color: var(--muted);
+}
+
+.company-plan-progress {
+  height: 11px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.company-plan-progress div {
+  height: 100%;
+  border-radius: 999px;
+  background: var(--primary-color);
+}
+
+@media (max-width: 640px) {
+  .company-subscription-alert.enhanced {
+    flex-direction: column;
+  }
+
+  .company-plan-progress-area > div:first-child {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

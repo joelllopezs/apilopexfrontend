@@ -135,16 +135,20 @@ export default function Dashboard() {
     if (status === "cancelled") {
       return {
         type: "danger",
+        icon: "!",
         title: "Assinatura cancelada",
-        text: "Sua assinatura está cancelada. Alguns recursos podem ser bloqueados em breve.",
+        text: "Sua assinatura está cancelada. A criação e alteração de dados podem ficar bloqueadas até a reativação.",
+        action: "Entre em contato com o suporte para reativar sua assinatura.",
       };
     }
 
     if (status === "overdue") {
       return {
-        type: "warning",
+        type: "danger",
+        icon: "!",
         title: "Pagamento atrasado",
-        text: "Sua assinatura está marcada como atrasada. Regularize para evitar bloqueios.",
+        text: "Sua assinatura está marcada como atrasada. Novos cadastros, alterações e agendamentos podem ficar bloqueados.",
+        action: "Regularize o pagamento para liberar o uso completo do sistema.",
       };
     }
 
@@ -154,51 +158,121 @@ export default function Dashboard() {
       if (days === null) {
         return {
           type: "info",
+          icon: "i",
           title: "Teste gratuito ativo",
           text: "Sua empresa está no período de teste gratuito.",
+          action: "Acompanhe o prazo para evitar bloqueio ao final do teste.",
         };
       }
 
       if (days < 0) {
         return {
-          type: "warning",
+          type: "danger",
+          icon: "!",
           title: "Teste gratuito vencido",
-          text: "Seu período de teste terminou. Aguarde a atualização da assinatura.",
+          text: "Seu período de teste gratuito terminou. Algumas ações podem ficar bloqueadas até a regularização da assinatura.",
+          action: "Entre em contato para ativar um plano e continuar usando a agenda.",
+        };
+      }
+
+      if (days === 0) {
+        return {
+          type: "warning",
+          icon: "!",
+          title: "Teste vence hoje",
+          text: "Seu teste gratuito termina hoje.",
+          action: "Regularize sua assinatura para continuar usando a plataforma sem interrupção.",
         };
       }
 
       if (days <= 3) {
         return {
           type: "warning",
+          icon: "!",
           title: "Teste perto de vencer",
           text: `Seu teste gratuito termina em ${days} dia${
             days === 1 ? "" : "s"
           }.`,
+          action: "Defina o plano antes do vencimento para evitar bloqueios.",
         };
       }
 
       return {
         type: "info",
+        icon: "i",
         title: "Teste gratuito ativo",
         text: `Seu teste gratuito termina em ${days} dias.`,
+        action: "Acompanhe seu prazo na tela Minha Assinatura.",
       };
     }
 
     if (status === "active") {
       const days = getDaysUntil(company.subscriptionEnd);
 
-      if (days !== null && days <= 5 && days >= 0) {
+      if (days !== null && days < 0) {
         return {
-          type: "info",
+          type: "danger",
+          icon: "!",
+          title: "Assinatura vencida",
+          text: "Sua assinatura passou da data de vencimento.",
+          action: "Regularize a renovação para evitar bloqueios no sistema.",
+        };
+      }
+
+      if (days === 0) {
+        return {
+          type: "warning",
+          icon: "!",
+          title: "Assinatura vence hoje",
+          text: "Sua assinatura vence hoje.",
+          action: "Renove para manter o acesso sem interrupção.",
+        };
+      }
+
+      if (days !== null && days <= 5) {
+        return {
+          type: "warning",
+          icon: "!",
           title: "Assinatura perto do vencimento",
           text: `Sua assinatura vence em ${days} dia${days === 1 ? "" : "s"}.`,
+          action: "Programe a renovação para evitar bloqueios.",
         };
       }
 
       return {
         type: "success",
+        icon: "✓",
         title: "Assinatura ativa",
         text: "Sua assinatura está ativa e liberada para uso.",
+        action: "Nenhuma ação necessária no momento.",
+      };
+    }
+
+    return null;
+  }
+
+  function getPlanUsageAlert() {
+    const plan = company?.plan || user.company?.plan || "start";
+    const professionalLimit = getPlanLimit(plan);
+    const usedProfessionals = summary.professionals;
+
+    if (usedProfessionals >= professionalLimit) {
+      return {
+        type: "warning",
+        title: "Limite de profissionais atingido",
+        text: `Seu plano ${translatePlan(
+          plan
+        )} permite até ${professionalLimit} profissional${
+          professionalLimit === 1 ? "" : "is"
+        } ativo${professionalLimit === 1 ? "" : "s"}.`,
+      };
+    }
+
+    if (usedProfessionals === professionalLimit - 1) {
+      return {
+        type: "info",
+        title: "Você está perto do limite do plano",
+        text: `Sua empresa está usando ${usedProfessionals}/${professionalLimit} profissionais ativos.`,
       };
     }
 
@@ -313,7 +387,17 @@ export default function Dashboard() {
     company?.subscriptionStatus || user.company?.subscriptionStatus || "trial";
   const professionalLimit = getPlanLimit(plan);
   const usedProfessionals = summary.professionals;
+  const remainingProfessionals = Math.max(
+    0,
+    professionalLimit - usedProfessionals
+  );
+  const usagePercent = Math.min(
+    100,
+    Math.round((usedProfessionals / professionalLimit) * 100)
+  );
+
   const subscriptionAlert = getSubscriptionAlert();
+  const planUsageAlert = getPlanUsageAlert();
 
   return (
     <div className="app-layout">
@@ -343,13 +427,38 @@ export default function Dashboard() {
         {message && <div className="alert-message">{message}</div>}
 
         {subscriptionAlert && (
-          <div className={`company-subscription-alert ${subscriptionAlert.type}`}>
-            <strong>{subscriptionAlert.title}</strong>
-            <span>{subscriptionAlert.text}</span>
+          <div
+            className={`company-subscription-alert enhanced ${subscriptionAlert.type}`}
+          >
+            <div className="company-subscription-alert-icon">
+              {subscriptionAlert.icon}
+            </div>
+
+            <div>
+              <strong>{subscriptionAlert.title}</strong>
+              <span>{subscriptionAlert.text}</span>
+              <small>{subscriptionAlert.action}</small>
+            </div>
           </div>
         )}
 
-        <section className="company-plan-panel">
+        {planUsageAlert && (
+          <div className={`company-subscription-alert enhanced ${planUsageAlert.type}`}>
+            <div className="company-subscription-alert-icon">
+              {planUsageAlert.type === "warning" ? "!" : "i"}
+            </div>
+
+            <div>
+              <strong>{planUsageAlert.title}</strong>
+              <span>{planUsageAlert.text}</span>
+              <small>
+                Para aumentar o limite, solicite alteração de plano ao suporte.
+              </small>
+            </div>
+          </div>
+        )}
+
+        <section className="company-plan-panel enhanced-plan-panel">
           <div className="company-plan-main">
             <div>
               <span className="company-plan-kicker">Plano atual</span>
@@ -363,6 +472,27 @@ export default function Dashboard() {
             <span className={getSubscriptionClass(subscriptionStatus)}>
               {translateSubscriptionStatus(subscriptionStatus)}
             </span>
+          </div>
+
+          <div className="company-plan-progress-area">
+            <div>
+              <strong>Uso de profissionais</strong>
+              <span>
+                {usedProfessionals}/{professionalLimit} profissionais ativos
+              </span>
+            </div>
+
+            <div className="company-plan-progress">
+              <div style={{ width: `${usagePercent}%` }} />
+            </div>
+
+            <small>
+              {remainingProfessionals > 0
+                ? `Ainda restam ${remainingProfessionals} profissional${
+                    remainingProfessionals === 1 ? "" : "is"
+                  } no seu plano.`
+                : "Você atingiu o limite de profissionais do seu plano."}
+            </small>
           </div>
 
           <div className="company-plan-grid">
