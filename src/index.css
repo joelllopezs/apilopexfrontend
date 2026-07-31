@@ -5143,3 +5143,22 @@ a,
     grid-template-columns: 1fr;
   }
 }
+
+.whatsapp-action-button {
+  border-color: rgba(34, 197, 94, 0.45) !important;
+  background: rgba(34, 197, 94, 0.12) !important;
+  color: #bbf7d0 !important;
+}
+
+.whatsapp-action-button:hover {
+  background: rgba(34, 197, 94, 0.2) !important;
+}
+
+.whatsapp-action-button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.appointment-actions {
+  min-width: 340px;
+}

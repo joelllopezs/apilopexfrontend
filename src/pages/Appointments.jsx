@@ -51,6 +51,121 @@ export default function Appointments() {
     return `${day}/${month}/${year}`;
   }
 
+  function normalizePhoneToWhatsApp(phone) {
+    if (!phone) return "";
+
+    const onlyNumbers = String(phone).replace(/\D/g, "");
+
+    if (!onlyNumbers) return "";
+
+    if (onlyNumbers.startsWith("55")) {
+      return onlyNumbers;
+    }
+
+    return `55${onlyNumbers}`;
+  }
+
+  function getCompanyFromStorage() {
+    try {
+      const storedCompany = localStorage.getItem("@lopex:company");
+
+      if (!storedCompany) return null;
+
+      return JSON.parse(storedCompany);
+    } catch {
+      return null;
+    }
+  }
+
+  function getPublicBookingUrl() {
+    const company = getCompanyFromStorage();
+
+    if (!company?.slug) return "";
+
+    return `${window.location.origin}/agendar/${company.slug}`;
+  }
+
+  function getCancelUrl(appointment) {
+    if (!appointment?.cancelToken) return "";
+
+    return `${window.location.origin}/agendar/cancelar/${appointment.id}/${appointment.cancelToken}`;
+  }
+
+  function buildWhatsAppMessage(appointment) {
+    const clientName = appointment.client?.name || "cliente";
+    const serviceName = appointment.service?.name || "serviço";
+    const professionalName = appointment.professional?.name || "profissional";
+    const appointmentDate = formatDate(appointment.date);
+    const startTime = appointment.startTime || "";
+    const endTime = appointment.endTime || "";
+    const status = translateStatus(appointment.status);
+    const publicBookingUrl = getPublicBookingUrl();
+    const cancelUrl = getCancelUrl(appointment);
+
+    const lines = [
+      `Olá, ${clientName}! Tudo bem?`,
+      "",
+      "Passando para confirmar as informações do seu agendamento:",
+      "",
+      `Serviço: ${serviceName}`,
+      `Profissional: ${professionalName}`,
+      `Data: ${appointmentDate}`,
+      `Horário: ${startTime}${endTime ? ` às ${endTime}` : ""}`,
+      `Status: ${status}`,
+      "",
+    ];
+
+    if (appointment.status === "confirmed") {
+      lines.push("Seu agendamento está confirmado. Te esperamos no horário marcado.");
+      lines.push("");
+    }
+
+    if (appointment.status === "pending") {
+      lines.push("Seu agendamento está pendente de confirmação.");
+      lines.push("");
+    }
+
+    if (appointment.status === "completed") {
+      lines.push("Obrigado pela preferência. Seu atendimento foi marcado como concluído.");
+      lines.push("");
+    }
+
+    if (appointment.status === "cancelled") {
+      lines.push("Seu agendamento foi marcado como cancelado.");
+      lines.push("");
+    }
+
+    if (cancelUrl && appointment.status !== "cancelled") {
+      lines.push("Caso precise cancelar, acesse:");
+      lines.push(cancelUrl);
+      lines.push("");
+    }
+
+    if (publicBookingUrl) {
+      lines.push("Para fazer um novo agendamento, acesse:");
+      lines.push(publicBookingUrl);
+      lines.push("");
+    }
+
+    lines.push("Mensagem enviada pelo LopeX Agenda.");
+
+    return lines.join("\n");
+  }
+
+  function openWhatsApp(appointment) {
+    const phone = normalizePhoneToWhatsApp(appointment.client?.phone);
+
+    if (!phone) {
+      setMessage("Este cliente não possui telefone/WhatsApp cadastrado.");
+      return;
+    }
+
+    const text = encodeURIComponent(buildWhatsAppMessage(appointment));
+    const url = `https://wa.me/${phone}?text=${text}`;
+
+    window.open(url, "_blank", "noopener,noreferrer");
+  }
+
   async function loadInitialData() {
     try {
       setMessage("");
@@ -365,7 +480,21 @@ export default function Appointments() {
                       </td>
 
                       <td>
-                        <div className="table-actions">
+                        <div className="table-actions appointment-actions">
+                          <button
+                            type="button"
+                            className="whatsapp-action-button"
+                            onClick={() => openWhatsApp(appointment)}
+                            disabled={!appointment.client?.phone}
+                            title={
+                              appointment.client?.phone
+                                ? "Enviar mensagem pelo WhatsApp"
+                                : "Cliente sem WhatsApp cadastrado"
+                            }
+                          >
+                            WhatsApp
+                          </button>
+
                           {appointment.status !== "confirmed" &&
                             appointment.status !== "cancelled" &&
                             appointment.status !== "completed" && (
