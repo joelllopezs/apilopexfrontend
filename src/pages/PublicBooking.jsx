@@ -21,6 +21,7 @@ export default function PublicBooking() {
   const [notes, setNotes] = useState("");
 
   const [loading, setLoading] = useState(false);
+  const [loadingInitialData, setLoadingInitialData] = useState(true);
   const [loadingTimes, setLoadingTimes] = useState(false);
   const [message, setMessage] = useState("");
   const [companyUnavailable, setCompanyUnavailable] = useState(false);
@@ -52,6 +53,50 @@ export default function PublicBooking() {
     });
   }
 
+  function getUnavailableTitle() {
+    if (!message) {
+      return "Agendamento indisponível";
+    }
+
+    const normalizedMessage = message.toLowerCase();
+
+    if (
+      normalizedMessage.includes("assinatura") ||
+      normalizedMessage.includes("pagamento") ||
+      normalizedMessage.includes("temporariamente indisponível")
+    ) {
+      return "Agenda temporariamente indisponível";
+    }
+
+    if (normalizedMessage.includes("não encontrada")) {
+      return "Empresa não encontrada";
+    }
+
+    return "Agendamento indisponível";
+  }
+
+  function getUnavailableDescription() {
+    if (!message) {
+      return "Esta empresa está temporariamente indisponível para receber novos agendamentos online.";
+    }
+
+    const normalizedMessage = message.toLowerCase();
+
+    if (
+      normalizedMessage.includes("assinatura") ||
+      normalizedMessage.includes("pagamento") ||
+      normalizedMessage.includes("temporariamente indisponível")
+    ) {
+      return "No momento, a agenda online desta empresa não está liberada para novos agendamentos.";
+    }
+
+    if (normalizedMessage.includes("não encontrada")) {
+      return "Não encontramos uma empresa ativa com este link de agendamento.";
+    }
+
+    return "Esta empresa está temporariamente indisponível para receber novos agendamentos online.";
+  }
+
   function getStepStatus(step) {
     if (step === 1) return serviceId ? "done" : "active";
     if (step === 2) return professionalId ? "done" : serviceId ? "active" : "";
@@ -66,6 +111,23 @@ export default function PublicBooking() {
     }
 
     return "";
+  }
+
+  function handlePublicError(error, fallbackMessage) {
+    console.error(error);
+
+    const status = error.response?.status;
+    const apiMessage = error.response?.data?.message;
+
+    if (status === 403 || status === 404) {
+      setCompanyUnavailable(true);
+      setServices([]);
+      setProfessionals([]);
+      setAvailableTimes([]);
+      setSelectedTime(null);
+    }
+
+    setMessage(apiMessage || fallbackMessage);
   }
 
   async function copyCancelLink() {
@@ -83,13 +145,15 @@ export default function PublicBooking() {
     }
   }
 
-  async function loadCompany() {
+  async function loadInitialData() {
     try {
+      setLoadingInitialData(true);
       setMessage("");
       setCompanyUnavailable(false);
+      setConfirmedAppointment(null);
 
-      const response = await api.get(`/public/company/${slug}`);
-      const companyData = response.data;
+      const companyResponse = await api.get(`/public/company/${slug}`);
+      const companyData = companyResponse.data;
 
       setCompany(companyData);
 
@@ -102,36 +166,21 @@ export default function PublicBooking() {
         "--primary-color",
         companyData.primaryColor || "#885AFE"
       );
-    } catch (error) {
-      console.error(error);
 
-      setCompanyUnavailable(true);
-
-      setMessage(
-        error.response?.data?.message ||
-          "Empresa não encontrada ou indisponível para agendamentos."
-      );
-    }
-  }
-
-  async function loadServicesAndProfessionals() {
-    try {
       const [servicesResponse, professionalsResponse] = await Promise.all([
         api.get(`/public/company/${slug}/services`),
         api.get(`/public/company/${slug}/professionals`),
       ]);
 
-      setServices(servicesResponse.data);
-      setProfessionals(professionalsResponse.data);
+      setServices(servicesResponse.data || []);
+      setProfessionals(professionalsResponse.data || []);
     } catch (error) {
-      console.error(error);
-
-      setCompanyUnavailable(error.response?.status === 403);
-
-      setMessage(
-        error.response?.data?.message ||
-          "Erro ao carregar serviços e profissionais."
+      handlePublicError(
+        error,
+        "Empresa não encontrada ou indisponível para agendamentos."
       );
+    } finally {
+      setLoadingInitialData(false);
     }
   }
 
@@ -140,7 +189,7 @@ export default function PublicBooking() {
       setLoadingTimes(true);
       setMessage("");
 
-      if (!serviceId || !professionalId || !date) {
+      if (!serviceId || !professionalId || !date || companyUnavailable) {
         setAvailableTimes([]);
         setSelectedTime(null);
         return;
@@ -157,13 +206,12 @@ export default function PublicBooking() {
         setMessage(response.data.message);
       }
     } catch (error) {
-      console.error(error);
-
       setAvailableTimes([]);
       setSelectedTime(null);
 
-      setMessage(
-        error.response?.data?.message || "Erro ao buscar horários disponíveis."
+      handlePublicError(
+        error,
+        "Erro ao buscar horários disponíveis."
       );
     } finally {
       setLoadingTimes(false);
@@ -233,24 +281,37 @@ export default function PublicBooking() {
       setClientEmail("");
       setNotes("");
     } catch (error) {
-      console.error(error);
-
-      setMessage(
-        error.response?.data?.message || "Erro ao confirmar agendamento."
-      );
+      handlePublicError(error, "Erro ao confirmar agendamento.");
     } finally {
       setLoading(false);
     }
   }
 
   useEffect(() => {
-    loadCompany();
-    loadServicesAndProfessionals();
+    loadInitialData();
   }, [slug]);
 
   useEffect(() => {
     loadAvailability();
   }, [serviceId, professionalId, date]);
+
+  if (loadingInitialData) {
+    return (
+      <div className="public-booking-page public-booking-polished">
+        <div className="public-booking-card public-unavailable-card">
+          <div className="public-company-logo unavailable-logo">
+            <span>...</span>
+          </div>
+
+          <h1>Carregando agenda</h1>
+
+          <p>Estamos buscando as informações de agendamento.</p>
+
+          <small>Aguarde alguns instantes.</small>
+        </div>
+      </div>
+    );
+  }
 
   if (companyUnavailable) {
     return (
@@ -260,12 +321,9 @@ export default function PublicBooking() {
             <span>!</span>
           </div>
 
-          <h1>Agendamento indisponível</h1>
+          <h1>{getUnavailableTitle()}</h1>
 
-          <p>
-            Esta empresa está temporariamente indisponível para receber novos
-            agendamentos online.
-          </p>
+          <p>{getUnavailableDescription()}</p>
 
           {message && <div className="public-alert">{message}</div>}
 
@@ -556,7 +614,9 @@ export default function PublicBooking() {
                     Selecione serviço, profissional e data para ver os horários.
                   </p>
                 ) : loadingTimes ? (
-                  <p className="public-muted">Buscando horários disponíveis...</p>
+                  <p className="public-muted">
+                    Buscando horários disponíveis...
+                  </p>
                 ) : availableTimes.length === 0 ? (
                   <div className="public-empty-state">
                     <strong>Nenhum horário disponível</strong>
