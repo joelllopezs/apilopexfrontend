@@ -53,6 +53,56 @@ export default function PublicBooking() {
     });
   }
 
+  function getServiceModeLabel(serviceMode) {
+    const labels = {
+      local: "Atendimento em local físico",
+      home: "Atendimento em domicílio",
+      online: "Atendimento online",
+      whatsapp: "Local combinado pelo WhatsApp",
+    };
+
+    return labels[serviceMode] || "Local combinado pelo WhatsApp";
+  }
+
+  function getCompanyAddress() {
+    if (!company) return "";
+
+    if (company.serviceMode !== "local") {
+      return getServiceModeLabel(company.serviceMode);
+    }
+
+    const streetLine = [company.street, company.number].filter(Boolean).join(", ");
+    const neighborhoodLine = company.neighborhood || "";
+    const cityLine = [company.city, company.state].filter(Boolean).join(" / ");
+    const zipCodeLine = company.zipCode ? `CEP ${company.zipCode}` : "";
+
+    return [streetLine, neighborhoodLine, cityLine, zipCodeLine]
+      .filter(Boolean)
+      .join(" - ");
+  }
+
+  function getLocationDescription() {
+    if (!company) return "";
+
+    if (company.serviceMode === "local") {
+      return getCompanyAddress() || "Endereço não informado.";
+    }
+
+    if (company.serviceMode === "home") {
+      const cityState = [company.city, company.state].filter(Boolean).join(" / ");
+
+      return cityState
+        ? `Atendimento em domicílio em ${cityState}. Confirme o endereço pelo WhatsApp da empresa.`
+        : "Atendimento em domicílio. Confirme o endereço pelo WhatsApp da empresa.";
+    }
+
+    if (company.serviceMode === "online") {
+      return "Atendimento online. A empresa enviará as informações de acesso pelo WhatsApp ou e-mail.";
+    }
+
+    return "O local do atendimento será combinado diretamente pelo WhatsApp da empresa.";
+  }
+
   function getUnavailableTitle() {
     if (!message) {
       return "Agendamento indisponível";
@@ -209,10 +259,7 @@ export default function PublicBooking() {
       setAvailableTimes([]);
       setSelectedTime(null);
 
-      handlePublicError(
-        error,
-        "Erro ao buscar horários disponíveis."
-      );
+      handlePublicError(error, "Erro ao buscar horários disponíveis.");
     } finally {
       setLoadingTimes(false);
     }
@@ -403,6 +450,16 @@ export default function PublicBooking() {
               <span>Contato</span>
               <strong>{confirmedAppointment.clientPhone}</strong>
             </div>
+
+            <div className="booking-success-row">
+              <span>Atendimento</span>
+              <strong>{getServiceModeLabel(company?.serviceMode)}</strong>
+            </div>
+
+            <div className="booking-success-row">
+              <span>Local</span>
+              <strong>{getLocationDescription()}</strong>
+            </div>
           </div>
 
           {confirmedAppointment.cancelUrl && (
@@ -463,6 +520,12 @@ export default function PublicBooking() {
             </div>
           </div>
 
+          <div className="public-company-info-box">
+            <span>Atendimento</span>
+            <strong>{getServiceModeLabel(company?.serviceMode)}</strong>
+            <p>{getLocationDescription()}</p>
+          </div>
+
           <div className="public-steps">
             <div className={`public-step ${getStepStatus(1)}`}>
               <span>1</span>
@@ -521,6 +584,11 @@ export default function PublicBooking() {
                 <strong>{formatPrice(selectedService.price)}</strong>
               </div>
             )}
+
+            <div>
+              <span>Atendimento</span>
+              <strong>{getServiceModeLabel(company?.serviceMode)}</strong>
+            </div>
           </div>
         </aside>
 
@@ -538,6 +606,12 @@ export default function PublicBooking() {
               <h1>{company?.name || "Agendamento online"}</h1>
               <p>Escolha serviço, profissional, data e horário.</p>
             </div>
+          </div>
+
+          <div className="public-company-info-box mobile-info-box">
+            <span>Atendimento</span>
+            <strong>{getServiceModeLabel(company?.serviceMode)}</strong>
+            <p>{getLocationDescription()}</p>
           </div>
 
           {message && <div className="public-alert">{message}</div>}

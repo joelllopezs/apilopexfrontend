@@ -51,6 +51,25 @@ const PLANS = [
   },
 ];
 
+const SERVICE_MODES = [
+  {
+    id: "local",
+    label: "Atendimento em local físico",
+  },
+  {
+    id: "home",
+    label: "Atendimento em domicílio",
+  },
+  {
+    id: "online",
+    label: "Atendimento online",
+  },
+  {
+    id: "whatsapp",
+    label: "Combinar pelo WhatsApp",
+  },
+];
+
 export default function RegisterCompany() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
@@ -66,6 +85,16 @@ export default function RegisterCompany() {
     companySlug: "",
     companyEmail: "",
     companyPhone: "",
+    companyDocumentType: "cpf",
+    companyDocument: "",
+    companyServiceMode: "whatsapp",
+    companyZipCode: "",
+    companyStreet: "",
+    companyNumber: "",
+    companyNeighborhood: "",
+    companyComplement: "",
+    companyCity: "",
+    companyState: "",
     primaryColor: "#885AFE",
   };
 
@@ -81,7 +110,7 @@ export default function RegisterCompany() {
   }
 
   function onlyNumbers(value) {
-    return value.replace(/\D/g, "");
+    return String(value || "").replace(/\D/g, "");
   }
 
   function formatPhone(value) {
@@ -106,6 +135,73 @@ export default function RegisterCompany() {
     )}`;
   }
 
+  function formatCpf(value) {
+    const numbers = onlyNumbers(value).slice(0, 11);
+
+    if (numbers.length <= 3) return numbers;
+
+    if (numbers.length <= 6) {
+      return `${numbers.slice(0, 3)}.${numbers.slice(3)}`;
+    }
+
+    if (numbers.length <= 9) {
+      return `${numbers.slice(0, 3)}.${numbers.slice(3, 6)}.${numbers.slice(
+        6
+      )}`;
+    }
+
+    return `${numbers.slice(0, 3)}.${numbers.slice(3, 6)}.${numbers.slice(
+      6,
+      9
+    )}-${numbers.slice(9)}`;
+  }
+
+  function formatCnpj(value) {
+    const numbers = onlyNumbers(value).slice(0, 14);
+
+    if (numbers.length <= 2) return numbers;
+
+    if (numbers.length <= 5) {
+      return `${numbers.slice(0, 2)}.${numbers.slice(2)}`;
+    }
+
+    if (numbers.length <= 8) {
+      return `${numbers.slice(0, 2)}.${numbers.slice(2, 5)}.${numbers.slice(
+        5
+      )}`;
+    }
+
+    if (numbers.length <= 12) {
+      return `${numbers.slice(0, 2)}.${numbers.slice(2, 5)}.${numbers.slice(
+        5,
+        8
+      )}/${numbers.slice(8)}`;
+    }
+
+    return `${numbers.slice(0, 2)}.${numbers.slice(2, 5)}.${numbers.slice(
+      5,
+      8
+    )}/${numbers.slice(8, 12)}-${numbers.slice(12)}`;
+  }
+
+  function formatDocument(value, documentType) {
+    if (documentType === "cnpj") {
+      return formatCnpj(value);
+    }
+
+    return formatCpf(value);
+  }
+
+  function formatCep(value) {
+    const numbers = onlyNumbers(value).slice(0, 8);
+
+    if (numbers.length <= 5) {
+      return numbers;
+    }
+
+    return `${numbers.slice(0, 5)}-${numbers.slice(5)}`;
+  }
+
   function isValidEmail(email) {
     if (!email) return false;
 
@@ -126,6 +222,10 @@ export default function RegisterCompany() {
     return ["start", "pro", "premium"].includes(plan);
   }
 
+  function isValidServiceMode(serviceMode) {
+    return ["local", "home", "online", "whatsapp"].includes(serviceMode);
+  }
+
   function getSelectedPlanName() {
     const selectedPlan = PLANS.find((plan) => plan.id === form.plan);
 
@@ -141,6 +241,9 @@ export default function RegisterCompany() {
     const companySlug = generateSlug(form.companySlug);
     const companyEmail = form.companyEmail.trim();
     const companyPhone = form.companyPhone.trim();
+    const companyDocument = onlyNumbers(form.companyDocument);
+    const companyCity = form.companyCity.trim();
+    const companyState = form.companyState.trim().toUpperCase();
 
     if (!isValidPlan(form.plan)) {
       return "Selecione um plano válido.";
@@ -210,6 +313,52 @@ export default function RegisterCompany() {
       return "Informe um telefone válido com DDD. Exemplo: (14) 99999-9999.";
     }
 
+    if (!companyDocument) {
+      return "Informe o CPF do responsável.";
+    }
+
+    if (form.companyDocumentType === "cpf" && companyDocument.length !== 11) {
+      return "Informe um CPF válido com 11 dígitos.";
+    }
+
+    if (form.companyDocumentType === "cnpj" && companyDocument.length !== 14) {
+      return "Informe um CNPJ válido com 14 dígitos.";
+    }
+
+    if (!isValidServiceMode(form.companyServiceMode)) {
+      return "Informe um tipo de atendimento válido.";
+    }
+
+    if (!companyCity) {
+      return "Informe a cidade.";
+    }
+
+    if (!companyState) {
+      return "Informe o estado.";
+    }
+
+    if (companyState.length !== 2) {
+      return "Informe o estado com 2 letras. Exemplo: SP.";
+    }
+
+    if (form.companyServiceMode === "local") {
+      if (!form.companyZipCode.trim()) {
+        return "Informe o CEP para atendimento em local físico.";
+      }
+
+      if (!form.companyStreet.trim()) {
+        return "Informe a rua para atendimento em local físico.";
+      }
+
+      if (!form.companyNumber.trim()) {
+        return "Informe o número para atendimento em local físico.";
+      }
+
+      if (!form.companyNeighborhood.trim()) {
+        return "Informe o bairro para atendimento em local físico.";
+      }
+    }
+
     return null;
   }
 
@@ -220,6 +369,14 @@ export default function RegisterCompany() {
       ...prev,
       companyName,
       companySlug: generateSlug(companyName),
+    }));
+  }
+
+  function handleDocumentTypeChange(documentType) {
+    setForm((prev) => ({
+      ...prev,
+      companyDocumentType: documentType,
+      companyDocument: "",
     }));
   }
 
@@ -249,6 +406,16 @@ export default function RegisterCompany() {
           ? form.companyEmail.trim().toLowerCase()
           : null,
         companyPhone: form.companyPhone.trim(),
+        companyDocumentType: form.companyDocumentType,
+        companyDocument: onlyNumbers(form.companyDocument),
+        companyServiceMode: form.companyServiceMode,
+        companyZipCode: form.companyZipCode.trim(),
+        companyStreet: form.companyStreet.trim(),
+        companyNumber: form.companyNumber.trim(),
+        companyNeighborhood: form.companyNeighborhood.trim(),
+        companyComplement: form.companyComplement.trim(),
+        companyCity: form.companyCity.trim(),
+        companyState: form.companyState.trim().toUpperCase(),
         logoUrl: "",
         primaryColor: form.primaryColor || "#885AFE",
       };
@@ -416,6 +583,27 @@ export default function RegisterCompany() {
               required
             />
 
+            <label>CPF do responsável</label>
+            <input
+              value={form.companyDocument}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  companyDocument: formatDocument(
+                    e.target.value,
+                    form.companyDocumentType
+                  ),
+                })
+              }
+              placeholder="Ex: 123.456.789-00"
+              required
+            />
+
+            <small className="field-help">
+              O CPF será usado apenas para identificação do responsável pelo
+              cadastro e controle de pagamento.
+            </small>
+
             <label>Senha</label>
             <input
               type="password"
@@ -497,6 +685,128 @@ export default function RegisterCompany() {
               placeholder="Ex: (14) 99999-9999"
               required
             />
+
+            <label>Tipo de atendimento</label>
+            <select
+              value={form.companyServiceMode}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  companyServiceMode: e.target.value,
+                })
+              }
+              required
+            >
+              {SERVICE_MODES.map((mode) => (
+                <option key={mode.id} value={mode.id}>
+                  {mode.label}
+                </option>
+              ))}
+            </select>
+
+            <div className="form-section-title">Localização</div>
+
+            <label>Cidade</label>
+            <input
+              value={form.companyCity}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  companyCity: e.target.value,
+                })
+              }
+              placeholder="Ex: Marília"
+              required
+            />
+
+            <label>Estado</label>
+            <input
+              value={form.companyState}
+              onChange={(e) =>
+                setForm({
+                  ...form,
+                  companyState: e.target.value.toUpperCase().slice(0, 2),
+                })
+              }
+              placeholder="Ex: SP"
+              maxLength={2}
+              required
+            />
+
+            {form.companyServiceMode === "local" && (
+              <>
+                <label>CEP</label>
+                <input
+                  value={form.companyZipCode}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      companyZipCode: formatCep(e.target.value),
+                    })
+                  }
+                  placeholder="Ex: 17500-000"
+                  required
+                />
+
+                <label>Rua</label>
+                <input
+                  value={form.companyStreet}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      companyStreet: e.target.value,
+                    })
+                  }
+                  placeholder="Ex: Rua São Luiz"
+                  required
+                />
+
+                <label>Número</label>
+                <input
+                  value={form.companyNumber}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      companyNumber: e.target.value,
+                    })
+                  }
+                  placeholder="Ex: 123"
+                  required
+                />
+
+                <label>Bairro</label>
+                <input
+                  value={form.companyNeighborhood}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      companyNeighborhood: e.target.value,
+                    })
+                  }
+                  placeholder="Ex: Centro"
+                  required
+                />
+
+                <label>Complemento</label>
+                <input
+                  value={form.companyComplement}
+                  onChange={(e) =>
+                    setForm({
+                      ...form,
+                      companyComplement: e.target.value,
+                    })
+                  }
+                  placeholder="Ex: Sala 2, próximo ao mercado"
+                />
+              </>
+            )}
+
+            {form.companyServiceMode !== "local" && (
+              <small className="field-help">
+                Como o atendimento não é em local físico, o endereço completo
+                não será obrigatório agora.
+              </small>
+            )}
 
             <label>Cor principal</label>
             <input

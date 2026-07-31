@@ -2,6 +2,25 @@ import { useEffect, useMemo, useState } from "react";
 import api from "../api/api";
 import Sidebar from "../components/Sidebar";
 
+const SERVICE_MODES = [
+  {
+    id: "local",
+    label: "Atendimento em local físico",
+  },
+  {
+    id: "home",
+    label: "Atendimento em domicílio",
+  },
+  {
+    id: "online",
+    label: "Atendimento online",
+  },
+  {
+    id: "whatsapp",
+    label: "Combinar pelo WhatsApp",
+  },
+];
+
 export default function Company() {
   const [loading, setLoading] = useState(false);
   const [loadingCompany, setLoadingCompany] = useState(false);
@@ -14,6 +33,16 @@ export default function Company() {
     phone: "",
     logoUrl: "",
     primaryColor: "#885AFE",
+    document: "",
+    documentType: "cpf",
+    serviceMode: "whatsapp",
+    zipCode: "",
+    street: "",
+    number: "",
+    neighborhood: "",
+    complement: "",
+    city: "",
+    state: "",
   });
 
   const publicLink = useMemo(() => {
@@ -22,6 +51,10 @@ export default function Company() {
     return `${window.location.origin}/agendar/${form.slug}`;
   }, [form.slug]);
 
+  function onlyNumbers(value) {
+    return String(value || "").replace(/\D/g, "");
+  }
+
   function generateSlug(value) {
     return value
       .toLowerCase()
@@ -29,6 +62,99 @@ export default function Company() {
       .replace(/[\u0300-\u036f]/g, "")
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)+/g, "");
+  }
+
+  function formatCpf(value) {
+    const numbers = onlyNumbers(value).slice(0, 11);
+
+    if (numbers.length <= 3) return numbers;
+
+    if (numbers.length <= 6) {
+      return `${numbers.slice(0, 3)}.${numbers.slice(3)}`;
+    }
+
+    if (numbers.length <= 9) {
+      return `${numbers.slice(0, 3)}.${numbers.slice(3, 6)}.${numbers.slice(
+        6
+      )}`;
+    }
+
+    return `${numbers.slice(0, 3)}.${numbers.slice(3, 6)}.${numbers.slice(
+      6,
+      9
+    )}-${numbers.slice(9)}`;
+  }
+
+  function formatCnpj(value) {
+    const numbers = onlyNumbers(value).slice(0, 14);
+
+    if (numbers.length <= 2) return numbers;
+
+    if (numbers.length <= 5) {
+      return `${numbers.slice(0, 2)}.${numbers.slice(2)}`;
+    }
+
+    if (numbers.length <= 8) {
+      return `${numbers.slice(0, 2)}.${numbers.slice(2, 5)}.${numbers.slice(
+        5
+      )}`;
+    }
+
+    if (numbers.length <= 12) {
+      return `${numbers.slice(0, 2)}.${numbers.slice(2, 5)}.${numbers.slice(
+        5,
+        8
+      )}/${numbers.slice(8)}`;
+    }
+
+    return `${numbers.slice(0, 2)}.${numbers.slice(2, 5)}.${numbers.slice(
+      5,
+      8
+    )}/${numbers.slice(8, 12)}-${numbers.slice(12)}`;
+  }
+
+  function formatDocument(value, documentType) {
+    if (documentType === "cnpj") {
+      return formatCnpj(value);
+    }
+
+    return formatCpf(value);
+  }
+
+  function formatCep(value) {
+    const numbers = onlyNumbers(value).slice(0, 8);
+
+    if (numbers.length <= 5) {
+      return numbers;
+    }
+
+    return `${numbers.slice(0, 5)}-${numbers.slice(5)}`;
+  }
+
+  function getServiceModeLabel(serviceMode) {
+    const item = SERVICE_MODES.find((mode) => mode.id === serviceMode);
+
+    return item?.label || "Combinar pelo WhatsApp";
+  }
+
+  function getAddressText() {
+    if (form.serviceMode !== "local") {
+      return getServiceModeLabel(form.serviceMode);
+    }
+
+    const parts = [
+      form.street,
+      form.number,
+      form.neighborhood,
+      form.city,
+      form.state,
+    ].filter(Boolean);
+
+    if (parts.length === 0) {
+      return "Endereço não informado";
+    }
+
+    return parts.join(" - ");
   }
 
   function validateSlug(slug) {
@@ -42,6 +168,68 @@ export default function Company() {
 
     if (!/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
       return "O slug deve conter apenas letras minúsculas, números e hífen.";
+    }
+
+    return null;
+  }
+
+  function validateForm() {
+    if (!form.name.trim()) {
+      return "Informe o nome da empresa.";
+    }
+
+    const slugError = validateSlug(generateSlug(form.slug));
+
+    if (slugError) {
+      return slugError;
+    }
+
+    const documentNumbers = onlyNumbers(form.document);
+
+    if (!documentNumbers) {
+      return "Informe o CPF do responsável.";
+    }
+
+    if (form.documentType === "cpf" && documentNumbers.length !== 11) {
+      return "Informe um CPF válido com 11 dígitos.";
+    }
+
+    if (form.documentType === "cnpj" && documentNumbers.length !== 14) {
+      return "Informe um CNPJ válido com 14 dígitos.";
+    }
+
+    if (!form.serviceMode) {
+      return "Informe o tipo de atendimento.";
+    }
+
+    if (!form.city.trim()) {
+      return "Informe a cidade.";
+    }
+
+    if (!form.state.trim()) {
+      return "Informe o estado.";
+    }
+
+    if (form.state.trim().length !== 2) {
+      return "Informe o estado com 2 letras. Exemplo: SP.";
+    }
+
+    if (form.serviceMode === "local") {
+      if (!form.zipCode.trim()) {
+        return "Informe o CEP para atendimento em local físico.";
+      }
+
+      if (!form.street.trim()) {
+        return "Informe a rua para atendimento em local físico.";
+      }
+
+      if (!form.number.trim()) {
+        return "Informe o número para atendimento em local físico.";
+      }
+
+      if (!form.neighborhood.trim()) {
+        return "Informe o bairro para atendimento em local físico.";
+      }
     }
 
     return null;
@@ -76,6 +264,14 @@ export default function Company() {
     document.documentElement.style.setProperty("--primary-color", color);
   }
 
+  function handleDocumentTypeChange(documentType) {
+    setForm((prev) => ({
+      ...prev,
+      documentType,
+      document: "",
+    }));
+  }
+
   function generateSlugFromName() {
     if (!form.name.trim()) {
       setMessage("Informe o nome da empresa para gerar o slug.");
@@ -105,6 +301,16 @@ export default function Company() {
         phone: company.phone || "",
         logoUrl: company.logoUrl || "",
         primaryColor: company.primaryColor || "#885AFE",
+        document: formatDocument(company.document || "", company.documentType || "cpf"),
+        documentType: company.documentType || "cpf",
+        serviceMode: company.serviceMode || "whatsapp",
+        zipCode: company.zipCode || "",
+        street: company.street || "",
+        number: company.number || "",
+        neighborhood: company.neighborhood || "",
+        complement: company.complement || "",
+        city: company.city || "",
+        state: company.state || "",
       });
 
       applyCompanyIdentity(company);
@@ -126,6 +332,13 @@ export default function Company() {
       setLoading(true);
       setMessage("");
 
+      const validationError = validateForm();
+
+      if (validationError) {
+        setMessage(validationError);
+        return;
+      }
+
       const payload = {
         name: form.name.trim(),
         slug: generateSlug(form.slug),
@@ -133,19 +346,17 @@ export default function Company() {
         phone: form.phone.trim() || null,
         logoUrl: form.logoUrl.trim() || null,
         primaryColor: form.primaryColor || "#885AFE",
+        document: onlyNumbers(form.document),
+        documentType: form.documentType,
+        serviceMode: form.serviceMode,
+        zipCode: form.zipCode.trim() || null,
+        street: form.street.trim() || null,
+        number: form.number.trim() || null,
+        neighborhood: form.neighborhood.trim() || null,
+        complement: form.complement.trim() || null,
+        city: form.city.trim(),
+        state: form.state.trim().toUpperCase(),
       };
-
-      if (!payload.name) {
-        setMessage("Informe o nome da empresa.");
-        return;
-      }
-
-      const slugError = validateSlug(payload.slug);
-
-      if (slugError) {
-        setMessage(slugError);
-        return;
-      }
 
       const response = await api.put("/companies/me", payload);
 
@@ -158,6 +369,19 @@ export default function Company() {
         phone: updatedCompany.phone || "",
         logoUrl: updatedCompany.logoUrl || "",
         primaryColor: updatedCompany.primaryColor || "#885AFE",
+        document: formatDocument(
+          updatedCompany.document || "",
+          updatedCompany.documentType || "cpf"
+        ),
+        documentType: updatedCompany.documentType || "cpf",
+        serviceMode: updatedCompany.serviceMode || "whatsapp",
+        zipCode: updatedCompany.zipCode || "",
+        street: updatedCompany.street || "",
+        number: updatedCompany.number || "",
+        neighborhood: updatedCompany.neighborhood || "",
+        complement: updatedCompany.complement || "",
+        city: updatedCompany.city || "",
+        state: updatedCompany.state || "",
       });
 
       applyCompanyIdentity(updatedCompany);
@@ -303,6 +527,176 @@ export default function Company() {
             </div>
 
             <div>
+              <label>Tipo de documento</label>
+              <select
+                value={form.documentType}
+                onChange={(e) => handleDocumentTypeChange(e.target.value)}
+              >
+                <option value="cpf">CPF</option>
+                <option value="cnpj">CNPJ</option>
+              </select>
+            </div>
+
+            <div>
+              <label>{form.documentType === "cnpj" ? "CNPJ" : "CPF"} do responsável</label>
+              <input
+                value={form.document}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    document: formatDocument(e.target.value, form.documentType),
+                  })
+                }
+                placeholder={
+                  form.documentType === "cnpj"
+                    ? "Ex: 12.345.678/0001-99"
+                    : "Ex: 123.456.789-00"
+                }
+                required
+              />
+            </div>
+
+            <div>
+              <label>Tipo de atendimento</label>
+              <select
+                value={form.serviceMode}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    serviceMode: e.target.value,
+                  })
+                }
+                required
+              >
+                {SERVICE_MODES.map((mode) => (
+                  <option key={mode.id} value={mode.id}>
+                    {mode.label}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            <h2>Localização</h2>
+
+            <div>
+              <label>Cidade</label>
+              <input
+                value={form.city}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    city: e.target.value,
+                  })
+                }
+                placeholder="Ex: Marília"
+                required
+              />
+            </div>
+
+            <div>
+              <label>Estado</label>
+              <input
+                value={form.state}
+                onChange={(e) =>
+                  setForm({
+                    ...form,
+                    state: e.target.value.toUpperCase().slice(0, 2),
+                  })
+                }
+                placeholder="Ex: SP"
+                maxLength={2}
+                required
+              />
+            </div>
+
+            {form.serviceMode === "local" && (
+              <>
+                <div>
+                  <label>CEP</label>
+                  <input
+                    value={form.zipCode}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        zipCode: formatCep(e.target.value),
+                      })
+                    }
+                    placeholder="Ex: 17500-000"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label>Rua</label>
+                  <input
+                    value={form.street}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        street: e.target.value,
+                      })
+                    }
+                    placeholder="Ex: Rua São Luiz"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label>Número</label>
+                  <input
+                    value={form.number}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        number: e.target.value,
+                      })
+                    }
+                    placeholder="Ex: 123"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label>Bairro</label>
+                  <input
+                    value={form.neighborhood}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        neighborhood: e.target.value,
+                      })
+                    }
+                    placeholder="Ex: Centro"
+                    required
+                  />
+                </div>
+
+                <div>
+                  <label>Complemento</label>
+                  <input
+                    value={form.complement}
+                    onChange={(e) =>
+                      setForm({
+                        ...form,
+                        complement: e.target.value,
+                      })
+                    }
+                    placeholder="Ex: Sala 2"
+                  />
+                </div>
+              </>
+            )}
+
+            {form.serviceMode !== "local" && (
+              <small className="field-help">
+                Para este tipo de atendimento, apenas cidade e estado são
+                obrigatórios.
+              </small>
+            )}
+
+            <h2>Identidade visual</h2>
+
+            <div>
               <label>URL da logo</label>
               <input
                 value={form.logoUrl}
@@ -371,6 +765,7 @@ export default function Company() {
             <h2>{form.name || "Nome da empresa"}</h2>
             <p>{form.email || "email@empresa.com"}</p>
             <p>{form.phone || "(00) 00000-0000"}</p>
+            <p>{getAddressText()}</p>
 
             <button
               type="button"
